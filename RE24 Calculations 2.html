@@ -1,72 +1,9 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
-
-<meta charset="utf-8">
-<meta name="generator" content="quarto-1.8.25">
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-
-
-<title>RE24</title>
-<style>
-code{white-space: pre-wrap;}
-span.smallcaps{font-variant: small-caps;}
-div.columns{display: flex; gap: min(4vw, 1.5em);}
-div.column{flex: auto; overflow-x: auto;}
-div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
-ul.task-list{list-style: none;}
-ul.task-list li input[type="checkbox"] {
-  width: 0.8em;
-  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
-  vertical-align: middle;
-}
-</style>
-
-
-<script src="RE24 Calculations 2_files/libs/clipboard/clipboard.min.js"></script>
-<script src="RE24 Calculations 2_files/libs/quarto-html/quarto.js" type="module"></script>
-<script src="RE24 Calculations 2_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
-<script src="RE24 Calculations 2_files/libs/quarto-html/axe/axe-check.js" type="module"></script>
-<script src="RE24 Calculations 2_files/libs/quarto-html/popper.min.js"></script>
-<script src="RE24 Calculations 2_files/libs/quarto-html/tippy.umd.min.js"></script>
-<script src="RE24 Calculations 2_files/libs/quarto-html/anchor.min.js"></script>
-<link href="RE24 Calculations 2_files/libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="RE24 Calculations 2_files/libs/quarto-html/quarto-syntax-highlighting-7b89279ff1a6dce999919e0e67d4d9ec.css" rel="stylesheet" id="quarto-text-highlighting-styles">
-<script src="RE24 Calculations 2_files/libs/bootstrap/bootstrap.min.js"></script>
-<link href="RE24 Calculations 2_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="RE24 Calculations 2_files/libs/bootstrap/bootstrap-9e3ffae467580fdb927a41352e75a2e0.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
-
-  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
-
-<script type="text/javascript">
-const typesetMath = (el) => {
-  if (window.MathJax) {
-    // MathJax Typeset
-    window.MathJax.typeset([el]);
-  } else if (window.katex) {
-    // KaTeX Render
-    var mathElements = el.getElementsByClassName("math");
-    var macros = [];
-    for (var i = 0; i < mathElements.length; i++) {
-      var texText = mathElements[i].firstChild;
-      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
-        window.katex.render(texText.data, mathElements[i], {
-          displayMode: mathElements[i].classList.contains('display'),
-          throwOnError: false,
-          macros: macros,
-          fleqn: false
-        });
-      }
-    }
-  }
-}
-window.Quarto = {
-  typesetMath
-};
-</script>
-
-</head>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">  <head>
+    <title>Garo Sarajian</title>
+    
+    <link href="style.css" rel="stylesheet">
+  </head>
 
 <body class="fullcontent quarto-light">
 
@@ -76,7 +13,6 @@ window.Quarto = {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">RE24</h1>
 </div>
 
 
@@ -92,6 +28,18 @@ window.Quarto = {
 
 </header>
 
+      <div class="header">
+        <h1>Garo Sarajian</h1>
+      </div>
+      
+        <div class="navigation">
+            <ul>
+                <li><a href="https://gsarajian.github.io">Home</a></li> //
+                <li><a href="https://gsarajian.github.io/research">Research</a></li>  //
+                <li><a href="https://gsarajian.github.io/projects">Projects</a></li>
+            </ul>
+        </div>
+<h1 class="title">RE24</h1>
 
 <section id="motivation-background" class="level2">
 <h2 class="anchored" data-anchor-id="motivation-background">Motivation &amp; Background</h2>
@@ -285,7 +233,7 @@ _ 2 3
 </tr>
 </tbody>
 </table>
-<p>That’s it, that’s the table. Now to use this to analyze batters, we could look at thet total number of runs above expected that they contributed at the plate using the following equation:</p>
+<p>That’s it, that’s the table. Now to use this to analyze batters, we could look at the total number of runs above expected that they contributed at the plate using the following equation:</p>
 <p><span class="math display">\[ Run Value = Expected Runs_{New state} - Expected Runs_{Old state} + RunsScoredOnPlay\]</span>For example, a leadoff single has a Run Value of <span class="math inline">\(0.876-0.497+0 = 0.379\)</span>. An inning-ending double play with the bases loaded and no runners scored has a Run Value of <span class="math inline">\(-1.579\)</span> and is the one of the worst possible plays in terms of Run Value, only behind triple plays that have no runners score. The highest Run Value occurs on a grand slam with two outs, giving a Run Value of <span class="math inline">\(0.104-0.719+4=3.385\)</span>. <a href="https://gsarajian.github.io/re24_2025_leaders">Here’s a list</a> of who produced the most Run Value in the 2025 regular season (min. 502 PAs).</p>
 </section>
 <section id="run-probability-matrix" class="level2">
