@@ -7,9 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Garo Sarajian</title>
-<link href="style.css" rel="stylesheet">
-
+<title>RE24</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -78,7 +76,7 @@ window.Quarto = {
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Garo Sarajian</h1>
+<h1 class="title">RE24</h1>
 </div>
 
 
@@ -93,24 +91,13 @@ window.Quarto = {
 
 
 </header>
-<div class="header">
-    
-      </div>
-      
-        <div class="navigation">
-            <ul>
-                <li><a href="https://gsarajian.github.io">Home</a></li> //
-                <li><a href="https://gsarajian.github.io/research">Research</a></li>  //
-                <li><a href="https://gsarajian.github.io/projects">Projects</a></li>
-            </ul>
-        </div>
-      
-<h1>RE24</h1>
+
+
 <section id="motivation-background" class="level2">
 <h2 class="anchored" data-anchor-id="motivation-background">Motivation &amp; Background</h2>
 <p>“Would you rather have a runner on 2nd with no outs or a runner on 3rd with one out?”</p>
 <p>I liked to start of my sabermetrics classes with some discussion about current players or teams or a situation that would motivate the lesson for the day, and the question above was one of my favorites. Students would bring up the importance of being able to bring a runner on 3rd home, or the value of having more opportunities (read: outs remaining) to drive in the runner. Some would bring up context: Who’s hitting? Who’s pitching? What’s the score? What inning? etc.</p>
-<p>The Run Expectancy and Run Probability Matrices are tools that one could use to help inform a manager decision to answer the question above. They’re also tools that can help analyze players and pitchers (especially relievers) by going beyond opportunistic stats such as RBIs and Runs.</p>
+<p>The Run Expectancy and Run Probability Matrices are tools that one could use to help inform a manager decision to answer the question above. They’re also tools that can help analyze players and pitchers by going beyond opportunistic stats such as RBIs and Runs.</p>
 </section>
 <section id="run-expectancy-matrix" class="level2">
 <h2 class="anchored" data-anchor-id="run-expectancy-matrix">Run Expectancy Matrix</h2>
@@ -298,8 +285,11 @@ _ 2 3
 </tr>
 </tbody>
 </table>
-<p>That’s it, that’s the table. Now to use this to analyze batters, we could look at thet total number of runs above expected that they contributed at the plate using the following equation:</p>
-<p><span class="math display">\[ Run Value = Expected Runs_{New state} - Expected Runs_{Old state} + RunsScoredOnPlay\]</span>For example, a leadoff single has a Run Value of <span class="math inline">\(0.876-0.497+0 = 0.379\)</span>. An inning-ending double play with the bases loaded and no runners scored has a Run Value of <span class="math inline">\(-1.579\)</span> and is the one of the worst possible plays in terms of Run Value, only behind triple plays that have no runners score. The highest Run Value occurs on a grand slam with two outs, giving a Run Value of <span class="math inline">\(0.104-0.719+4=3.385\)</span>. Below is the top 10 leaders in RE24 in 2025, and <a href="https://gsarajian.github.io/re24_2025_leaders">here’s a list</a> of who produced the most Run Value in the 2025 regular season (min. 502 PAs).</p>
+<p>That’s it, that’s the table. Side note, these values are used in finding <a href="https://library.fangraphs.com/principles/linear-weights/">linear weights</a>, which in turn are used for other advanced stats such as <a href="https://library.fangraphs.com/offense/woba/">wOBA</a>.</p>
+<section id="analyzing-hitters" class="level3">
+<h3 class="anchored" data-anchor-id="analyzing-hitters">Analyzing hitters</h3>
+<p>Now to use this to analyze batters, we could look at thet total number of runs above expected that they contributed at the plate using the following equation:</p>
+<p><span class="math display">\[ Run Value = Expected Runs_{New state} - Expected Runs_{Old state} + RunsScoredOnPlay\]</span> The idea behind this is we’re attributing the change in baserunner-out state to the batter. For example, a leadoff single has a Run Value of <span class="math inline">\(0.876-0.497+0 = 0.379\)</span>. An inning-ending double play with the bases loaded and no runners scored has a Run Value of <span class="math inline">\(-1.579\)</span> and is the one of the worst possible plays in terms of Run Value, only behind triple plays that have no runners score. The highest Run Value occurs on a grand slam with two outs, giving a Run Value of <span class="math inline">\(0.104-0.719+4=3.385\)</span>. Below is the top 10 leaders in RE24 for batters in 2025, and <a href="https://gsarajian.github.io/re24_2025_leaders">here’s a list</a> of who produced the most Run Value in the 2025 regular season (min. 502 PAs).</p>
 <table class="table-style" id="T_6d79">
 <thead>
 <tr>
@@ -427,6 +417,138 @@ CLE
 </tr>
 </tbody>
 </table>
+</section>
+<section id="analyzing-pitchers" class="level3">
+<h3 class="anchored" data-anchor-id="analyzing-pitchers">Analyzing Pitchers</h3>
+<p>RE24 can also be used to analyze pitchers in the same way it was used for batters. It measures how many runs above average did the pitcher give up, so lower is better, as you can see from the leaderboard below or the full leaderboard. Starting pitchers don’t inherit any runners or outs, so their stat is closely related to ERA*IP. They’ll tend to lead both ends of the leaderboard when looking at total RE24 due to their high volume of innings pitched. Below is the top 10 leaders in RE24 for pitchers in 2025, and <a href="https://gsarajian.github.io/re24_2025_leaders_p">here’s a list</a> of who produced the most Run Value in the 2025 regular season (min. 100 PAs).</p>
+<table class="table-style" id="T_pitchers">
+<thead>
+<tr>
+<th class="index_name level0">
+Name
+</th>
+<th id="T_pitchers_level0_col0" class="col_heading level0 col0">
+Team
+</th>
+<th id="T_pitchers_level0_col1" class="col_heading level0 col1">
+re24
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td id="T_pitchers_level0_row0" class="row_heading level0 row0">
+Paul Skenes
+</td>
+<td id="T_pitchers_row0_col0" class="data row0 col0">
+PIT
+</td>
+<td id="T_pitchers_row0_col1" class="data row0 col1">
+-48.9285
+</td>
+</tr>
+<tr>
+<td id="T_pitchers_level0_row1" class="row_heading level0 row1">
+Tarik Skubal
+</td>
+<td id="T_pitchers_row1_col0" class="data row1 col0">
+DET
+</td>
+<td id="T_pitchers_row1_col1" class="data row1 col1">
+-44.7914
+</td>
+</tr>
+<tr>
+<td id="T_pitchers_level0_row2" class="row_heading level0 row2">
+Cristopher Sanchez
+</td>
+<td id="T_pitchers_row2_col0" class="data row2 col0">
+PHI
+</td>
+<td id="T_pitchers_row2_col1" class="data row2 col1">
+-44.1328
+</td>
+</tr>
+<tr>
+<td id="T_pitchers_level0_row3" class="row_heading level0 row3">
+Garrett Crochet
+</td>
+<td id="T_pitchers_row3_col0" class="data row3 col0">
+BOS
+</td>
+<td id="T_pitchers_row3_col1" class="data row3 col1">
+-43.6804
+</td>
+</tr>
+<tr>
+<td id="T_pitchers_level0_row4" class="row_heading level0 row4">
+Freddy Peralta
+</td>
+<td id="T_pitchers_row4_col0" class="data row4 col0">
+MIL
+</td>
+<td id="T_pitchers_row4_col1" class="data row4 col1">
+-36.5034
+</td>
+</tr>
+<tr>
+<td id="T_pitchers_level0_row5" class="row_heading level0 row5">
+Hunter Brown
+</td>
+<td id="T_pitchers_row5_col0" class="data row5 col0">
+HOU
+</td>
+<td id="T_pitchers_row5_col1" class="data row5 col1">
+-35.7782
+</td>
+</tr>
+<tr>
+<td id="T_pitchers_level0_row6" class="row_heading level0 row6">
+Yoshinobu Yamamoto
+</td>
+<td id="T_pitchers_row6_col0" class="data row6 col0">
+LAD
+</td>
+<td id="T_pitchers_row6_col1" class="data row6 col1">
+-34.2904
+</td>
+</tr>
+<tr>
+<td id="T_pitchers_level0_row7" class="row_heading level0 row7">
+Nathan Eovaldi
+</td>
+<td id="T_pitchers_row7_col0" class="data row7 col0">
+TEX
+</td>
+<td id="T_pitchers_row7_col1" class="data row7 col1">
+-33.9676
+</td>
+</tr>
+<tr>
+<td id="T_pitchers_level0_row8" class="row_heading level0 row8">
+Trevor Rogers
+</td>
+<td id="T_pitchers_row8_col0" class="data row8 col0">
+BAL
+</td>
+<td id="T_pitchers_row8_col1" class="data row8 col1">
+-30.9783
+</td>
+</tr>
+<tr>
+<td id="T_pitchers_level0_row9" class="row_heading level0 row9">
+Jacob deGrom
+</td>
+<td id="T_pitchers_row9_col0" class="data row9 col0">
+TEX
+</td>
+<td id="T_pitchers_row9_col1" class="data row9 col1">
+-30.468
+</td>
+</tr>
+</tbody>
+</table>
+</section>
 </section>
 <section id="run-probability-matrix" class="level2">
 <h2 class="anchored" data-anchor-id="run-probability-matrix">Run Probability Matrix</h2>
