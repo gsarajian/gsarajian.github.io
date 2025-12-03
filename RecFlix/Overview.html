@@ -1,0 +1,117 @@
+<html>
+  <head>
+    <title>Garo Sarajian</title>
+    
+    <link href="style.css" rel="stylesheet">
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Garo Sarajian</h1>
+      </div>
+      
+        <div class="navigation">
+            <ul>
+                <li><a href="https://gsarajian.github.io">Home</a></li> //
+                <li><a href="https://gsarajian.github.io/projects">Projects</a></li>  //
+                <li><a href="https://gsarajian.github.io/research">Research</a></li>  
+            </ul>
+        </div>
+      
+      <div class="text">
+
+<!--
+<img src="./Me.JPG" width="166" height="296" align="right" title="Me" alt="Me" ...="">
+          
+<img src="./P+.jpg" title="What's This?" alt="P+" usemap="#betamap" align="right" width="200" height="200">
+-->
+
+<!--
+<map name="bracket_map">    
+  <area shape="rect" coords="0,0,200,200" alt="P+" href="https://www.youtube.com/watch?v=uV0g4zT4yEc">
+-->
+<!--
+  <area shape="rect" coords="34,44,270,350" alt="Computer" href="computer.htm">
+  <area shape="rect" coords="290,172,333,250" alt="Phone" href="phone.htm">
+  <area shape="circle" coords="337,300,44" alt="Coffee" href="coffee.htm">
+-->
+</map>
+          
+<!--
+<map name="betamap">
+  <area shape="rect" coords="0,0,200,200" title="What's This?" alt="What's This?" href="./P+.JPG"target="_blank">
+</map>
+-->
+          
+          <div class="header">
+            <h2>RecFlix</h2> </div>
+            <p>
+        
+    </p>
+    <p>This is one of my larger projects where I explore various <a href="https://en.wikipedia.org/wiki/Recommender_system">recommender systems</a> for movie recommendations. All of the analysis uses data from <a href="https://www.kaggle.com/datasets/jneupane12/movielens"> MovieLens dataset on Kaggle</a> and is based on what I learned from  <a href="https://lazyprogrammer.me/">The Lazy Programmer's</a> <a href="https://www.udemy.com/course/recommender-systems/?srsltid=AfmBOorjLfujUwCe8NhdqceZzydbZunsN-WHIWuoJ3doftVD3UtS8d3h&couponCode=KEEPLEARNING">online course</a> on Udemy.</p>
+
+    <div class="header">
+    <h2>Non-personalized Recommendations</h2> </div>
+          
+          <p>These approaches don't factor in individual tastes and are helpful for determining overall rankings and approaching the <a href="https://en.wikipedia.org/wiki/Cold_start_(recommender_systems)">cold start problem</a>.</p>
+<br>
+      <p><img src="Media/amz_rats.png" width="175" height="140" align="right" usemap="#DA_map"><a href="RecFlix%20Dampened%20Means.html">Dampened Averages</a></p>
+<!--        <p><img src="Screenshots/top_re24.png" alt="RE24 Leaders" align="right" usemap="#RE_map" width="150" height="100"><a href="Movie Recommendations testing v4">Dampened Averages</a></p>-->
+<!--
+      <map name="DA_map">    
+      <area shape="rect" coords="0,0,200,200" href="Movie Recommendations testing v4.html">
+-->
+      <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; An approach that dampens the mean rating based on the number of ratings.</p>
+      <br>
+      <p><a href="RecFlix%20LCB%20Rating.html">Lower Confidence Interval Bound</a></p>
+      <map name="LCB_map">    
+<!--      <area shape="rect" coords="0,0,200,200" href="Movie Recommendations testing v4.html">-->
+      <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; An approach that ranks based on the lower bound of the confidence interval for the mean.</p>
+      <br>
+          
+          
+<!--
+      <p><img src="Screenshots/Bracket_screenshot.png" alt="Bracket Screenshot" align="right" usemap="#bracket_map" width="150" height="100"><a href="https://github.com/gsarajian/NYHackr">Graph Theory and Linear Algebra in the Wild</a></p>
+      <map name="bracket_map">    
+      <area shape="rect" coords="0,0,200,200" alt="P+" href="https://www.youtube.com/watch?v=uV0g4zT4yEc">
+      <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Some applications of linear algebra and graph theory for some ranking projects. For ranking NCAA Basketball teams, I used Massey's method, which incorporates multiple linear regression, and a PageRank algorithm, which incorporates eigenvectors. For ranking the connectness of musicians, I used various measures of centralities. <a href="https://www.youtube.com/watch?v=uV0g4zT4yEc">Here's</a> a recording of me discussing it.</p>
+-->
+      <br>
+          
+    <div class="header">
+    <h2>Personalized Recommendations</h2> </div>
+          
+          <p>These approaches tailor recommendations to users. Stay tuned for posts on  <a href="https://en.wikipedia.org/wiki/Collaborative_filtering">collaborative filtering</a> and <a href="https://en.wikipedia.org/wiki/Matrix_factorization_(recommender_systems)">matrix factorization</a> approaches.</p>
+<br>
+<!--
+      <p><img src="Screenshots/top_re24.png" alt="RE24 Leaders" align="right" usemap="#RE_map" width="150" height="100"><a href="https://gsarajian.github.io/RE24">RE24 in 2025</a></p>
+      <map name="RE_map">    
+      <area shape="rect" coords="0,0,200,200" alt="P+" href="https://gsarajian.github.io/RE24">
+      <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;A stepping stone for a larger project, I created a one-stop shop for those who want to find the 2025 leaders in RE24 and kept the code open source for people to compute the statistic in future seasons.</p>
+      <br>
+          
+          
+      <p><img src="Screenshots/Bracket_screenshot.png" alt="Bracket Screenshot" align="right" usemap="#bracket_map" width="150" height="100"><a href="https://github.com/gsarajian/NYHackr">Graph Theory and Linear Algebra in the Wild</a></p>
+      <map name="bracket_map">    
+      <area shape="rect" coords="0,0,200,200" alt="P+" href="https://www.youtube.com/watch?v=uV0g4zT4yEc">
+      <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Some applications of linear algebra and graph theory for some ranking projects. For ranking NCAA Basketball teams, I used Massey's method, which incorporates multiple linear regression, and a PageRank algorithm, which incorporates eigenvectors. For ranking the connectness of musicians, I used various measures of centralities. <a href="https://www.youtube.com/watch?v=uV0g4zT4yEc">Here's</a> a recording of me discussing it.</p>
+-->
+      <br><br>
+          
+        <!--<h3>Publications</h3>-->
+        
+          <!-- <ol>
+          <li>Publication #1</li>
+          <li>Publication #2</li>
+        </ol> -->
+      </div>
+      
+      
+    </div>
+  </body>
+  
+
+  
+  
+</html>
