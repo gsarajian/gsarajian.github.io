@@ -832,7 +832,7 @@ Band of Brothers (2001)
 <li><span class="math inline">\(\bar{X} = \frac{1}{N_j} \sum_i X_i\)</span>, and</li>
 <li><span class="math inline">\(z_{\alpha/2}\)</span> be the <span class="math inline">\(1-\alpha/2\)</span> quantile of the standard normal distribution, and .</li>
 </ul>
-<p><span class="math display">\[r_j = \left ( \hat{p} + \frac{z_{\alpha/2}^2}{2N_j} - z_{\alpha/2} \sqrt{(\hat{p}(1-\hat{p}) + z_{\alpha/2}^2/4N_j )/n}\right ) / (1 + z_{\alpha/2}^2/n)\]</span></p>
+<p><span class="math display">\[r_j = \left ( \hat{p} + \frac{z_{\alpha/2}^2}{2N_j} - z_{\alpha/2} \sqrt{(\hat{p}(1-\hat{p}) + z_{\alpha/2}^2/4N_j )/N_j}\right ) / (1 + z_{\alpha/2}^2/N_j)\]</span></p>
 <p>This approach will assuage the issue of overrated movies being recommended. The equation above is a biased estimator of the true underlying rating; it underrates all movies, with the bias being less severe for movies with more reviews. Movies with few reviews will have a wider confidence interval, so their rating will tend to be lower. As a movie gets more ratings, its confidence interval will narrow and be closer to the true rating. We’ll apply the method with <span class="math inline">\(\alpha = 0.05\)</span>, though this is a hyperparameter that can be tuned.</p>
 <div id="1c39b3f5-fccc-4e96-a902-75819eca2af7" class="cell">
 <details class="code-fold">
