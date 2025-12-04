@@ -259,7 +259,80 @@ Inquire Within (2012)
 </tr>
 </tbody>
 </table>
-<p>Not quite the blockbusters or classics we were expecting.. We’ll soon see that there are a bunch of movies that had just one rating with an average of 5 stars. A little bit of Exploratory Data Analysis to start.</p>
+<p>Not quite the blockbusters or classics we were expecting.. We’ll soon see that there are a bunch of movies that had just one rating with an average of 5 stars. We could filter the data to only include movies whose number of ratings is over a certain threshold <span class="math inline">\(m\)</span>, as this table does with <span class="math inline">\(m = 50\)</span>.</p>
+<table class="dataframe table table-sm table-striped small">
+  <thead>
+    <tr>
+      <th>movieId</th>
+      <th>Title</th>
+      <th>Mean Rating</th>
+      <th>Number of Ratings</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>318</td>
+      <td>Shawshank Redemption, The (1994)</td>
+      <td>4.453</td>
+      <td>15402</td>
+    </tr>
+    <tr>
+      <td>858</td>
+      <td>Godfather, The (1972)</td>
+      <td>4.351</td>
+      <td>10029</td>
+    </tr>
+    <tr>
+      <td>50</td>
+      <td>Usual Suspects, The (1995)</td>
+      <td>4.349</td>
+      <td>11419</td>
+    </tr>
+    <tr>
+      <td>527</td>
+      <td>Schindler's List (1993)</td>
+      <td>4.308</td>
+      <td>12269</td>
+    </tr>
+    <tr>
+      <td>7502</td>
+      <td>Band of Brothers (2001)</td>
+      <td>4.289</td>
+      <td>1053</td>
+    </tr>
+    <tr>
+      <td>1221</td>
+      <td>Godfather: Part II, The (1974)</td>
+      <td>4.278</td>
+      <td>6591</td>
+    </tr>
+    <tr>
+      <td>77658</td>
+      <td>Cosmos (1980)</td>
+      <td>4.277</td>
+      <td>235</td>
+    </tr>
+    <tr>
+      <td>922</td>
+      <td>Sunset Blvd. (a.k.a. Sunset Boulevard) (1950)</td>
+      <td>4.268</td>
+      <td>1569</td>
+    </tr>
+    <tr>
+      <td>2019</td>
+      <td>Seven Samurai (Shichinin no samurai) (1954)</td>
+      <td>4.267</td>
+      <td>2823</td>
+    </tr>
+    <tr>
+      <td>912</td>
+      <td>Casablanca (1942)</td>
+      <td>4.264</td>
+      <td>5891</td>
+    </tr>
+  </tbody>
+</table>
+<p>However, this is a little crude for a few reasons. It's tricky to pick a threshold <span class="math inline">\(m\)</span> that is fair; lower values of <span class="math inline">\(m\)</span> will allow movies with small sample sizes to pass, while higher values don't consider movies with <span class="math inline">\(m-1\)</span> ratings, even if they're all 5-stars. By smoothing the means, we can balance these two competing stakes. A little bit of Exploratory Data Analysis to start.</p>
 <div id="797bb117" class="cell">
 <details class="code-fold">
 <summary>Code</summary>
