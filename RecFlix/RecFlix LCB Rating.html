@@ -496,332 +496,137 @@ Examined Life (2008)
 </table>
 <p>Hmm.. still not what we might expect from the “top” movies. Keen observers will notice that when <span class="math inline">\(N_j = 1\)</span>, our confidence interval reduces to a point, so the movies with solely one 5-star rating will have their lower confidence bound be equal to 5. We can try to work around this by only looking at movies with at least a certain number of ratings, or movies with at least two different types of ratings. When we require at least two ratings, we still have the same issue as before:</p>
 <table class="dataframe table table-sm table-striped small">
-<thead>
-<tr>
-<th>
-Title
-</th>
-<th>
-Mean Rating
-</th>
-<th>
-Number of Ratings
-</th>
-<th>
-CI Lower Bound
-</th>
-<th>
-CI Upper Bound
-</th>
-</tr>
-
-</thead>
-<tbody>
-<tr>
-<td>
-Dream of Light (a.k.a. Quince Tree Sun, The) (Sol del membrillo, El) (1992)
-</td>
-<td>
-5.00
-</td>
-<td>
-2.0
-</td>
-<td>
-5.000
-</td>
-<td>
-5.000
-</td>
-</tr>
-<tr>
-<td>
-Little Mermaid: Ariel’s Beginning, The (2008)
-</td>
-<td>
-5.00
-</td>
-<td>
-2.0
-</td>
-<td>
-5.000
-</td>
-<td>
-5.000
-</td>
-</tr>
-<tr>
-<td>
-Absolute Giganten (1999)
-</td>
-<td>
-5.00
-</td>
-<td>
-2.0
-</td>
-<td>
-5.000
-</td>
-<td>
-5.000
-</td>
-</tr>
-<tr>
-<td>
-Repentance (Monanieba) (1984)
-</td>
-<td>
-4.75
-</td>
-<td>
-2.0
-</td>
-<td>
-1.573
-</td>
-<td>
-7.927
-</td>
-</tr>
-<tr>
-<td>
-Year of the Hare, The (Jäniksen vuosi) (1977)
-</td>
-<td>
-4.75
-</td>
-<td>
-4.0
-</td>
-<td>
-4.291
-</td>
-<td>
-5.209
-</td>
-</tr>
-</tbody>
+  <thead>
+    <tr style="text-align: left;">
+      <th>Title</th>
+      <th>Mean Rating</th>
+      <th>Number of Ratings</th>
+      <th>CI Lower Bound</th>
+      <th>CI Upper Bound</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Consuming Kids: The Commercialization of Childhood (2008)</td>
+      <td>5.0</td>
+      <td>2.0</td>
+      <td>5.0</td>
+      <td>5.0</td>
+    </tr>
+    <tr>
+      <td>Catastroika (2012)</td>
+      <td>5.0</td>
+      <td>2.0</td>
+      <td>5.0</td>
+      <td>5.0</td>
+    </tr>
+    <tr>
+      <td>Memorial Day (2011)</td>
+      <td>4.5</td>
+      <td>2.0</td>
+      <td>4.5</td>
+      <td>4.5</td>
+    </tr>
+    <tr>
+      <td>Orderers (Les ordres) (1974)</td>
+      <td>4.5</td>
+      <td>2.0</td>
+      <td>4.5</td>
+      <td>4.5</td>
+    </tr>
+    <tr>
+      <td>Ankur (The Seedling) (1974)</td>
+      <td>4.5</td>
+      <td>3.0</td>
+      <td>4.5</td>
+      <td>4.5</td>
+    </tr>
+  </tbody>
 </table>
-<p>The issue continues to hold even even as we raise the minimum amount of reviews to 15:</p>
+<p>Once we raise the minimum amount of reviews to 5, this issue goes away:
+</p>
 <table class="dataframe table table-sm table-striped small">
-<thead>
-<tr>
-<th>
-Title
-</th>
-<th>
-Mean Rating
-</th>
-<th>
-Number of Ratings
-</th>
-<th>
-CI Lower Bound
-</th>
-<th>
-CI Upper Bound
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>
-Shawshank Redemption, The (1994)
-</td>
-<td>
-4.450
-</td>
-<td>
-7837.0
-</td>
-<td>
-4.434
-</td>
-<td>
-4.466
-</td>
-</tr>
-<tr>
-<td>
-Heart of a Dog (Sobachye serdtse) (1988)
-</td>
-<td>
-4.367
-</td>
-<td>
-15.0
-</td>
-<td>
-4.045
-</td>
-<td>
-4.689
-</td>
-</tr>
-<tr>
-<td>
-Cowboy Bebop (1998)
-</td>
-<td>
-4.364
-</td>
-<td>
-22.0
-</td>
-<td>
-4.064
-</td>
-<td>
-4.663
-</td>
-</tr>
-<tr>
-<td>
-Godfather, The (1972)
-</td>
-<td>
-4.357
-</td>
-<td>
-5162.0
-</td>
-<td>
-4.334
-</td>
-<td>
-4.380
-</td>
-</tr>
-<tr>
-<td>
-Usual Suspects, The (1995)
-</td>
-<td>
-4.354
-</td>
-<td>
-5873.0
-</td>
-<td>
-4.335
-</td>
-<td>
-4.373
-</td>
-</tr>
-</tbody>
-</table>
-<p>If we raise the bar to at least 62 reviews, the I finally recognize the top 5:</p>
-<table class="dataframe table table-sm table-striped small">
-<thead>
-<tr>
-<th>
-Title
-</th>
-<th>
-Mean Rating
-</th>
-<th>
-Number of Ratings
-</th>
-<th>
-CI Lower Bound
-</th>
-<th>
-CI Upper Bound
-</th>
-</tr>
-
-</thead>
-<tbody>
-<tr>
-<td>
-Shawshank Redemption, The (1994)
-</td>
-<td>
-4.450
-</td>
-<td>
-7837.0
-</td>
-<td>
-4.434
-</td>
-<td>
-4.466
-</td>
-</tr>
-<tr>
-<td>
-Godfather, The (1972)
-</td>
-<td>
-4.357
-</td>
-<td>
-5162.0
-</td>
-<td>
-4.334
-</td>
-<td>
-4.380
-</td>
-</tr>
-<tr>
-<td>
-Usual Suspects, The (1995)
-</td>
-<td>
-4.354
-</td>
-<td>
-5873.0
-</td>
-<td>
-4.335
-</td>
-<td>
-4.373
-</td>
-</tr>
-<tr>
-<td>
-Schindler’s List (1993)
-</td>
-<td>
-4.302
-</td>
-<td>
-6309.0
-</td>
-<td>
-4.281
-</td>
-<td>
-4.322
-</td>
-</tr>
-<tr>
-<td>
-Band of Brothers (2001)
-</td>
-<td>
-4.285
-</td>
-<td>
-550.0
-</td>
-<td>
-4.212
-</td>
-<td>
-4.357
-</td>
-</tr>
-</tbody>
+  <thead>
+    <tr style="text-align: left;">
+      <th>Title</th>
+      <th>Mean Rating</th>
+      <th>Number of Ratings</th>
+      <th>CI Lower Bound</th>
+      <th>CI Upper Bound</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Shawshank Redemption, The (1994)</td>
+      <td>4.447</td>
+      <td>63366.0</td>
+      <td>4.441</td>
+      <td>4.453</td>
+    </tr>
+    <tr>
+      <td>Godfather, The (1972)</td>
+      <td>4.365</td>
+      <td>41355.0</td>
+      <td>4.357</td>
+      <td>4.373</td>
+    </tr>
+    <tr>
+      <td>Usual Suspects, The (1995)</td>
+      <td>4.334</td>
+      <td>47006.0</td>
+      <td>4.328</td>
+      <td>4.341</td>
+    </tr>
+    <tr>
+      <td>Schindler's List (1993)</td>
+      <td>4.310</td>
+      <td>50054.0</td>
+      <td>4.303</td>
+      <td>4.317</td>
+    </tr>
+    <tr>
+      <td>Godfather: Part II, The (1974)</td>
+      <td>4.276</td>
+      <td>27398.0</td>
+      <td>4.265</td>
+      <td>4.286</td>
+    </tr>
+    <tr>
+      <td>Rear Window (1954)</td>
+      <td>4.271</td>
+      <td>17449.0</td>
+      <td>4.260</td>
+      <td>4.283</td>
+    </tr>
+    <tr>
+      <td>Seven Samurai (Shichinin no samurai) (1954)</td>
+      <td>4.274</td>
+      <td>11611.0</td>
+      <td>4.259</td>
+      <td>4.289</td>
+    </tr>
+    <tr>
+      <td>Casablanca (1942)</td>
+      <td>4.258</td>
+      <td>24349.0</td>
+      <td>4.247</td>
+      <td>4.269</td>
+    </tr>
+    <tr>
+      <td>One Flew Over the Cuckoo's Nest (1975)</td>
+      <td>4.248</td>
+      <td>29932.0</td>
+      <td>4.239</td>
+      <td>4.257</td>
+    </tr>
+    <tr>
+      <td>Sunset Blvd. (a.k.a. Sunset Boulevard) (1950)</td>
+      <td>4.257</td>
+      <td>6525.0</td>
+      <td>4.237</td>
+      <td>4.277</td>
+    </tr>
+  </tbody>
 </table>
 </section>
 <section id="wilson-score-interval" class="level4">
@@ -882,231 +687,98 @@ Band of Brothers (2001)
 </details>
 </div>
 <table class="dataframe table table-sm table-striped small">
-<thead>
-<tr>
-<th>
-Title
-</th>
-<th>
-LCB Rating
-</th>
-<th>
-Rating Count
-</th>
-<th>
-Fractional Positive Mean
-</th>
-<th>
-Wilson Lower
-</th>
-<th>
-Wilson Upper
-</th>
-</tr>
-
-</thead>
-<tbody>
-<tr>
-<td>
-Shawshank Redemption, The (1994)
-</td>
-<td>
-4.418
-</td>
-<td>
-4461.0
-</td>
-<td>
-0.880
-</td>
-<td>
-0.871
-</td>
-<td>
-0.890
-</td>
-</tr>
-<tr>
-<td>
-Godfather, The (1972)
-</td>
-<td>
-4.336
-</td>
-<td>
-2988.0
-</td>
-<td>
-0.865
-</td>
-<td>
-0.852
-</td>
-<td>
-0.877
-</td>
-</tr>
-<tr>
-<td>
-Usual Suspects, The (1995)
-</td>
-<td>
-4.313
-</td>
-<td>
-3391.0
-</td>
-<td>
-0.859
-</td>
-<td>
-0.847
-</td>
-<td>
-0.871
-</td>
-</tr>
-<tr>
-<td>
-Schindler’s List (1993)
-</td>
-<td>
-4.252
-</td>
-<td>
-3608.0
-</td>
-<td>
-0.846
-</td>
-<td>
-0.834
-</td>
-<td>
-0.857
-</td>
-</tr>
-<tr>
-<td>
-Godfather: Part II, The (1974)
-</td>
-<td>
-4.221
-</td>
-<td>
-2005.0
-</td>
-<td>
-0.843
-</td>
-<td>
-0.827
-</td>
-<td>
-0.859
-</td>
-</tr>
-<tr>
-<td>
-Casablanca (1942)
-</td>
-<td>
-4.207
-</td>
-<td>
-1784.0
-</td>
-<td>
-0.842
-</td>
-<td>
-0.824
-</td>
-<td>
-0.858
-</td>
-</tr>
-<tr>
-<td>
-One Flew Over the Cuckoo’s Nest (1975)
-</td>
-<td>
-4.171
-</td>
-<td>
-2119.0
-</td>
-<td>
-0.832
-</td>
-<td>
-0.816
-</td>
-<td>
-0.848
-</td>
-</tr>
-<tr>
-<td>
-Rear Window (1954)
-</td>
-<td>
-4.164
-</td>
-<td>
-1277.0
-</td>
-<td>
-0.836
-</td>
-<td>
-0.814
-</td>
-<td>
-0.855
-</td>
-</tr>
-<tr>
-<td>
-Raiders of the Lost Ark (Indiana Jones and the Raiders of the Lost Ark) (1981)
-</td>
-<td>
-4.158
-</td>
-<td>
-3187.0
-</td>
-<td>
-0.826
-</td>
-<td>
-0.813
-</td>
-<td>
-0.839
-</td>
-</tr>
-<tr>
-<td>
-Fight Club (1999)
-</td>
-<td>
-4.147
-</td>
-<td>
-2850.0
-</td>
-<td>
-0.825
-</td>
-<td>
-0.811
-</td>
-<td>
-0.838
-</td>
-</tr>
-</tbody>
+  <thead>
+    <tr style="text-align: left;">
+      <th>Title</th>
+      <th>LCB Rating</th>
+      <th>Rating Count</th>
+      <th>Fractional Positive Mean</th>
+      <th>Wilson Lower</th>
+      <th>Wilson Upper</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Shawshank Redemption, The (1994)</td>
+      <td>4.435</td>
+      <td>63366.0</td>
+      <td>0.877</td>
+      <td>0.875</td>
+      <td>0.880</td>
+    </tr>
+    <tr>
+      <td>Godfather, The (1972)</td>
+      <td>4.349</td>
+      <td>41355.0</td>
+      <td>0.859</td>
+      <td>0.855</td>
+      <td>0.862</td>
+    </tr>
+    <tr>
+      <td>Usual Suspects, The (1995)</td>
+      <td>4.320</td>
+      <td>47006.0</td>
+      <td>0.852</td>
+      <td>0.849</td>
+      <td>0.855</td>
+    </tr>
+    <tr>
+      <td>Schindler's List (1993)</td>
+      <td>4.296</td>
+      <td>50054.0</td>
+      <td>0.847</td>
+      <td>0.844</td>
+      <td>0.850</td>
+    </tr>
+    <tr>
+      <td>Godfather: Part II, The (1974)</td>
+      <td>4.256</td>
+      <td>27398.0</td>
+      <td>0.839</td>
+      <td>0.835</td>
+      <td>0.843</td>
+    </tr>
+    <tr>
+      <td>Rear Window (1954)</td>
+      <td>4.246</td>
+      <td>17449.0</td>
+      <td>0.838</td>
+      <td>0.833</td>
+      <td>0.843</td>
+    </tr>
+    <tr>
+      <td>Seven Samurai (Shichinin no samurai) (1954)</td>
+      <td>4.244</td>
+      <td>11611.0</td>
+      <td>0.839</td>
+      <td>0.832</td>
+      <td>0.845</td>
+    </tr>
+    <tr>
+      <td>Casablanca (1942)</td>
+      <td>4.237</td>
+      <td>24349.0</td>
+      <td>0.835</td>
+      <td>0.830</td>
+      <td>0.840</td>
+    </tr>
+    <tr>
+      <td>One Flew Over the Cuckoo's Nest (1975)</td>
+      <td>4.229</td>
+      <td>29932.0</td>
+      <td>0.833</td>
+      <td>0.829</td>
+      <td>0.837</td>
+    </tr>
+    <tr>
+      <td>Dr. Strangelove or: How I Learned to Stop Worrying and Love the Bomb (1964)</td>
+      <td>4.225</td>
+      <td>23220.0</td>
+      <td>0.833</td>
+      <td>0.828</td>
+      <td>0.837</td>
+    </tr>
+  </tbody>
 </table>
 <p>The top 5 using this method are the same as the top 5 that we saw from the dampened mean approach for higher values of <span class="math inline">\(\lambda\)</span>, but the next 5 differ more with Casablanca being the only one on both lists. The dampened mean’s approach’s top 10 is the table below:</p>
 <table class="dataframe table table-sm table-striped small">
