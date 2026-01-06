@@ -55,7 +55,7 @@ div.sourceCode
 @media screen {
 pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
-.navigation ul {
+        .navigation ul {
   list-style-type: none;
   text-align: left;
   padding-left: 0;
@@ -71,7 +71,6 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     text-decoration: none;
 }
 
-    
 </style>
 
 
@@ -140,11 +139,7 @@ window.Quarto = {
     
   </div>
   
-
-
-</header>
-
-        <div class="navigation">
+    <div class="navigation">
             <ul>
                 <li><a href="https://gsarajian.github.io">Home</a></li> //
                 <li><a href="https://gsarajian.github.io/projects">Projects</a></li>  //
@@ -153,38 +148,108 @@ window.Quarto = {
         </div>
 
 
+</header>
+
+
 <section id="motivation" class="level2">
 <h2 class="anchored" data-anchor-id="motivation">Motivation</h2>
-<!-- ![](Screenshots/pts_vs_age_25.png) -->
 <p><img src="Screenshots/pts_vs_age_25.png" width="500" height="300"></p>
-<p>As part of our <a href="https://github.com/erictleung/statistical-rethinking-book-club">Bayesian Statistics book club</a>, I wanted to demonstrate a use case of Bayesian techniques while familiarizing myself with some of the hierarchical modeling tools in python. Since I had some experience with sabermetrics and wanted to do something slightly different, I settled on the following question.</p>
+<p>As part of our <a href="https://github.com/erictleung/statistical-rethinking-book-club">Bayesian Statistics book club</a>, I wanted to demonstrate a use case of Bayesian techniques while familiarizing myself with some of the hierarchical modeling tools in python (read: PyMC). Since I had some experience with sabermetrics and R and wanted to do something slightly different, I settled on the following question.</p>
 <section id="how-can-one-model-nba-players-career-trajectories" class="level3">
 <h3 class="anchored" data-anchor-id="how-can-one-model-nba-players-career-trajectories">How can one model NBA players’ career trajectories?</h3>
-<p>This question has much relevance for players, coaches, general managers, fans, and others. I’ll mostly follow the lead of Jim Albert’s <a href="https://baseballwithr.wordpress.com/2019/11/25/multilevel-modeling-of-obp-trajectories/">excellent blog post</a> on an analogous question for MLB players. Although there are many ways NBA players contribute to their teams’ success, we’ll narrow our scope and only use three bits of information: who the player is, their age, and how many points they scored each season. First let’s grab the data and pare it down to players who played last season and who have played at least two seasons. <!-- in the last 25 years who have played at least 5 seasons in that time frame. --></p>
+<p>This question has much relevance for players, coaches, general managers, fans, and others. I’ll mostly follow the lead of Jim Albert’s <a href="https://baseballwithr.wordpress.com/2019/11/25/multilevel-modeling-of-obp-trajectories/">excellent blog post</a> on an analogous question for MLB players. Although there are many ways NBA players contribute to their teams’ success, we’ll narrow our scope and only use three pieces of information: who the player is, their age, and how many points they scored each season. First let’s grab the data and pare it down to the career stats of players who played last season and who have played at least three seasons.</p>
 <div id="f5e305b8-2ecc-452f-8a15-4672fbe886c6" class="cell" data-execution_count="2">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> nba_api</span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># from nba_api.stats.static import teams</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> nba_api.stats.endpoints <span class="im">import</span> playercareerstats</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="co"># from nba_api.stats.endpoints import playercareerstats, leaguegamefinder</span></span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> nba_api.stats.endpoints <span class="im">import</span> leaguedashplayerstats</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> plotly.express <span class="im">as</span> px</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> plotly.graph_objects <span class="im">as</span> go</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> time <span class="im">import</span> sleep</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.preprocessing <span class="im">import</span> PolynomialFeatures</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.linear_model <span class="im">import</span> LinearRegression</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> arviz <span class="im">as</span> az</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> seaborn <span class="im">as</span> sns</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pymc <span class="im">as</span> pm</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pytensor.tensor <span class="im">as</span> pt</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>pd.set_option(<span class="st">'display.max_columns'</span>, <span class="va">None</span>)</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>pd.options.display.float_format <span class="op">=</span> <span class="st">"</span><span class="sc">{:,.2f}</span><span class="st">"</span>.<span class="bu">format</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div id="15a6b060-26bd-4434-a45a-886947867c97" class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Last 25 NBA seasons</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>start_year <span class="op">=</span> <span class="dv">2000</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>end_year <span class="op">=</span> <span class="dv">2025</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>seasons <span class="op">=</span> [<span class="ss">f"</span><span class="sc">{</span>y<span class="sc">}</span><span class="ss">-</span><span class="sc">{</span><span class="bu">str</span>(y<span class="op">+</span><span class="dv">1</span>)[<span class="op">-</span><span class="dv">2</span>:]<span class="sc">}</span><span class="ss">"</span> <span class="cf">for</span> y <span class="kw">in</span> <span class="bu">range</span>(start_year, end_year)]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div id="ce01a0b1-7cfa-47e4-8862-61cd46f59b89" class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>all_seasons_data <span class="op">=</span> []</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> season <span class="kw">in</span> seasons:</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f"Fetching </span><span class="sc">{</span>season<span class="sc">}</span><span class="ss">..."</span>)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    stats <span class="op">=</span> leaguedashplayerstats.LeagueDashPlayerStats(</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>        season<span class="op">=</span>season,</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>        season_type_all_star<span class="op">=</span><span class="st">"Regular Season"</span>,</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>        per_mode_detailed<span class="op">=</span><span class="st">"Totals"</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    ).get_data_frames()[<span class="dv">0</span>]</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Keep only what we need</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    stats <span class="op">=</span> stats[[<span class="st">"PLAYER_ID"</span>, <span class="st">"PLAYER_NAME"</span>, <span class="st">"PTS"</span>, <span class="st">"AGE"</span>]].copy()</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    stats[<span class="st">"AGE"</span>] <span class="op">=</span> stats[<span class="st">'AGE'</span>].astype(<span class="bu">int</span>)</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    stats[<span class="st">"SEASON_ID"</span>] <span class="op">=</span> season</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    all_seasons_data.append(stats)</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>    sleep(<span class="fl">0.6</span>)  <span class="co"># VERY important to avoid rate limits</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div id="268acf85-8714-422e-a01c-6d5cd1730134" class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.concat(all_seasons_data, ignore_index<span class="op">=</span><span class="va">True</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div id="b60f5f59-60b9-41b0-9762-1a7b856b8fa7" class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>season_counts <span class="op">=</span> (</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    df.groupby(<span class="st">"PLAYER_ID"</span>)[<span class="st">"SEASON_ID"</span>]</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    .nunique()</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    .reset_index(name<span class="op">=</span><span class="st">"SEASONS_PLAYED"</span>)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>current_players <span class="op">=</span> stats[<span class="st">"PLAYER_ID"</span>]      <span class="co"># players who played in '24-'25; "stats" is last year's data</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>eligible_players <span class="op">=</span> season_counts[</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    season_counts[<span class="st">"SEASONS_PLAYED"</span>] <span class="op">&gt;=</span> <span class="dv">3</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>][<span class="st">"PLAYER_ID"</span>]</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>filtered_df <span class="op">=</span> df[df[<span class="st">"PLAYER_ID"</span>].isin(eligible_players) <span class="op">&amp;</span> df[<span class="st">"PLAYER_ID"</span>].isin(current_players)]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
 </section>
 </section>
 <section id="two-wrong-approaches" class="level2">
 <h2 class="anchored" data-anchor-id="two-wrong-approaches">Two Wrong Approaches</h2>
-<section id="ignoring-who-the-players-are" class="level3">
-<h3 class="anchored" data-anchor-id="ignoring-who-the-players-are">Ignoring who the players are</h3>
+<section id="ignoring-who-the-players-are-only-using-age-points" class="level3">
+<h3 class="anchored" data-anchor-id="ignoring-who-the-players-are-only-using-age-points">Ignoring who the players are, only using age &amp; points</h3>
 <p>Let’s look at the average number of points scored by players during last season based on their age. The plot at the top of the page is fit with a <a href="https://en.wikipedia.org/wiki/Local_regression">LOESS</a> model, and for simplicity, we can also fit a quadratic model:</p>
 <p><span class="math display">\[Points_i = \beta_0 + \beta_1 Age_i + \beta_2 Age_i^2\]</span></p>
 <p>Here’s the plot with a quadratic model.</p>
 <p><img src="Screenshots/pts_vs_age_25_quad.png" width="500" height="300"></p>
-<p>Without much context, these might be surprising. The LOESS model shows that players continue to score more points on average as they age, and the quadratic model shows a decline, but it shows players continuing to score at a respectable rate, even in their late 30s. This is contrary to what we might expect from older players being less athletic. Why don’t teams fill their rosters with older players who are great at scoring? The issue with that logic is that there’s a <a href="https://en.wikipedia.org/wiki/Survivorship_bias">survivorship bias</a>. The following table, bar chart, and explanation after break it down for us.</p>
+<p>Without much context, these might be surprising. The LOESS model shows that players continue to score more points on average as they age, and the quadratic model shows a decline, but it shows players continuing to score at a respectable rate, even in their late 30s. This is contrary to what we might expect from older players being less athletic. Why don’t teams fill their rosters with older players who are great at scoring? The issue with that logic is that there’s a <a href="https://en.wikipedia.org/wiki/Survivorship_bias">survivorship bias</a>. The following table, bar chart, and explanation break it down for us.</p>
 <table class="dataframe table table-sm table-striped small">
 <thead>
 <tr>
@@ -195,7 +260,7 @@ Age
 Average Points
 </th>
 <th>
-Number of players
+Number of Players
 </th>
 </tr>
 </thead>
@@ -445,7 +510,7 @@ Number of players
 </tbody>
 </table>
 <p><img src="Screenshots/pts_vs_age_25_bar.png" width="500" height="300"></p>
-<p>We can see there are a lot 20-something year-olds in the league, which is in tune with what we might’ve originally expected. The older ages have high scoring averages because the only players who are that age and are still in the league are stars who are past their peaks but are still good enough to contribute to their teams. Or as I told my class, “if we only looked at players with over 20 years of playing time, the results are pretty skewed since we’re only looking at LeBron James, who isn’t representitve of players.” Here are all the players who were 40 years old last season.</p>
+<p>We can see there are a lot 20-something year-olds in the league, which is in tune with what we might’ve originally expected. The older ages have high scoring averages because the only players who are that age and are still in the league are stars who are past their peaks but are still good enough to contribute to their teams. Or to paraphrase what I told my sabermetrics class, “if we only looked at players with over 20 years of playing time, the results are pretty skewed since we’re only looking at LeBron James, who isn’t representitve of players.” Here are all the players who were 40 years old last season.</p>
 <table class="dataframe table table-sm table-striped small">
 <thead>
 <tr>
@@ -511,30 +576,690 @@ Taj Gibson
 </section>
 <section id="individual-models" class="level3">
 <h3 class="anchored" data-anchor-id="individual-models">Individual models</h3>
-<p>So how can we try to account for this and model career trajectories? The other end of the spectrum would be to ignore similarities across players and to fit individual models for each player. We don’t have as much data for younger players, so I’d be hesitant to fit a LOESS model, and a quadratic model might seem like a good first approximation. A quadratic model looks as follows:</p>
+<p>So how can we try to account for this and model career trajectories? The other end of the spectrum would be to ignore similarities across players and to fit individual models for each player. A quadratic model might seem like a good first approximation, and it looks as follows:</p>
 <p><span class="math display">\[Points_i = \beta_{0,i} + \beta_{1,i} Age_i + \beta_{2,i} Age_i^2 \]</span></p>
 <p>However, even with a lightweight model, this would be overfitting. For example, here are quadratic fits to all players who received an MVP vote in the ’24-’25 season.</p>
+<div id="aceeb3dd-b8da-4c68-b470-63b4bcdd9a5b" class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fit_player_quadratic(player_df):</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    X <span class="op">=</span> player_df[[<span class="st">"AGE"</span>]].values</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    y <span class="op">=</span> player_df[<span class="st">"PTS"</span>].values</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    poly <span class="op">=</span> PolynomialFeatures(degree<span class="op">=</span><span class="dv">2</span>, include_bias<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    X_poly <span class="op">=</span> poly.fit_transform(X)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    model <span class="op">=</span> LinearRegression()</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    model.fit(X_poly, y)</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> pd.Series({</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>        <span class="st">"beta_0"</span>: model.intercept_,</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>        <span class="st">"beta_age"</span>: model.coef_[<span class="dv">0</span>],</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>        <span class="st">"beta_age2"</span>: model.coef_[<span class="dv">1</span>],</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>        <span class="st">"n_obs"</span>: <span class="bu">len</span>(player_df),</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>        <span class="st">"age_min"</span>: player_df[<span class="st">"AGE"</span>].<span class="bu">min</span>(),</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>        <span class="st">"age_max"</span>: player_df[<span class="st">"AGE"</span>].<span class="bu">max</span>()</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    })</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div id="488fa74d-2d9e-4f6a-b06f-c868bb3f0d31" class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>player_models <span class="op">=</span> (</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    df</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    .groupby([<span class="st">"PLAYER_ID"</span>, <span class="st">"PLAYER_NAME"</span>])</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    .<span class="bu">apply</span>(fit_player_quadratic)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    .reset_index()</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div id="d4ec75a8-45a8-4ec4-ad1b-56cef86ba186" class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>players_to_plot <span class="op">=</span> [</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Shai Gilgeous-Alexander"</span>,</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Nikola Jokić"</span>,</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Giannis Antetokounmpo"</span>,</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Jayson Tatum"</span>,</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Donovan Mitchell"</span>,</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"LeBron James"</span>,</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Cade Cunningham"</span>,</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Anthony Edwards"</span>,</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Stephen Curry"</span>,</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Jalen Brunson"</span>,</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">"James Harden"</span>,</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Evan Mobley"</span></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div id="d29f604a-ec8a-4c98-b0dc-1b04021c039b" class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> make_color_map(player_names):</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    palette <span class="op">=</span> px.colors.qualitative.Set2</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> {</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>        player: palette[i <span class="op">%</span> <span class="bu">len</span>(palette)]</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> i, player <span class="kw">in</span> <span class="bu">enumerate</span>(player_names)</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    }</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div id="f792b205-71d8-4f36-99c5-af5ead394ae5" class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> plot_players_with_quadratics(</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    df,</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    model_df,</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    player_names,</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    age_grid_size<span class="op">=</span><span class="dv">100</span>,</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    max_age<span class="op">=</span><span class="dv">40</span>,</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    y_clip<span class="op">=</span>(<span class="dv">0</span>, <span class="dv">3000</span>)</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>):</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    fig <span class="op">=</span> go.Figure()</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    color_map <span class="op">=</span> make_color_map(player_names)</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> player <span class="kw">in</span> player_names:</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>        df_p <span class="op">=</span> df[df[<span class="st">"PLAYER_NAME"</span>] <span class="op">==</span> player]</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>        model_p <span class="op">=</span> model_df[model_df[<span class="st">"PLAYER_NAME"</span>] <span class="op">==</span> player].iloc[<span class="dv">0</span>]</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>        color <span class="op">=</span> color_map[player]</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>        age_min <span class="op">=</span> df_p[<span class="st">"AGE"</span>].<span class="bu">min</span>()</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>        age_max_obs <span class="op">=</span> df_p[<span class="st">"AGE"</span>].<span class="bu">max</span>()</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Scatter: observed data</span></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>        fig.add_trace(</span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>            go.Scatter(</span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>                x<span class="op">=</span>df_p[<span class="st">"AGE"</span>],</span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>                y<span class="op">=</span>df_p[<span class="st">"PTS"</span>],</span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>                mode<span class="op">=</span><span class="st">"markers"</span>,</span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>                name<span class="op">=</span><span class="ss">f"</span><span class="sc">{</span>player<span class="sc">}</span><span class="ss">"</span>,</span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>                marker<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span>color, size<span class="op">=</span><span class="dv">8</span>),</span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>                legendgroup<span class="op">=</span>player,</span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>                showlegend<span class="op">=</span><span class="va">True</span></span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>            )</span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Full age grid</span></span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a>        ages_full <span class="op">=</span> np.linspace(age_min, max_age, age_grid_size)</span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a>        pts_full <span class="op">=</span> (</span>
+<span id="cb10-36"><a href="#cb10-36" aria-hidden="true" tabindex="-1"></a>            model_p[<span class="st">"beta_0"</span>]</span>
+<span id="cb10-37"><a href="#cb10-37" aria-hidden="true" tabindex="-1"></a>            <span class="op">+</span> model_p[<span class="st">"beta_age"</span>] <span class="op">*</span> ages_full</span>
+<span id="cb10-38"><a href="#cb10-38" aria-hidden="true" tabindex="-1"></a>            <span class="op">+</span> model_p[<span class="st">"beta_age2"</span>] <span class="op">*</span> ages_full<span class="op">**</span><span class="dv">2</span></span>
+<span id="cb10-39"><a href="#cb10-39" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb10-40"><a href="#cb10-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-41"><a href="#cb10-41" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Replace out-of-range values with None (line breaks)</span></span>
+<span id="cb10-42"><a href="#cb10-42" aria-hidden="true" tabindex="-1"></a>        pts_plot <span class="op">=</span> np.where(</span>
+<span id="cb10-43"><a href="#cb10-43" aria-hidden="true" tabindex="-1"></a>            (pts_full <span class="op">&gt;=</span> y_clip[<span class="dv">0</span>]) <span class="op">&amp;</span> (pts_full <span class="op">&lt;=</span> y_clip[<span class="dv">1</span>]),</span>
+<span id="cb10-44"><a href="#cb10-44" aria-hidden="true" tabindex="-1"></a>            pts_full,</span>
+<span id="cb10-45"><a href="#cb10-45" aria-hidden="true" tabindex="-1"></a>            <span class="va">None</span></span>
+<span id="cb10-46"><a href="#cb10-46" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb10-47"><a href="#cb10-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-48"><a href="#cb10-48" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Observed vs extrapolated masks</span></span>
+<span id="cb10-49"><a href="#cb10-49" aria-hidden="true" tabindex="-1"></a>        obs_mask <span class="op">=</span> ages_full <span class="op">&lt;=</span> age_max_obs</span>
+<span id="cb10-50"><a href="#cb10-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-51"><a href="#cb10-51" aria-hidden="true" tabindex="-1"></a>        fig.add_trace(</span>
+<span id="cb10-52"><a href="#cb10-52" aria-hidden="true" tabindex="-1"></a>            go.Scatter(</span>
+<span id="cb10-53"><a href="#cb10-53" aria-hidden="true" tabindex="-1"></a>                x<span class="op">=</span>ages_full,</span>
+<span id="cb10-54"><a href="#cb10-54" aria-hidden="true" tabindex="-1"></a>                y<span class="op">=</span>np.where(obs_mask, pts_plot, <span class="va">None</span>),</span>
+<span id="cb10-55"><a href="#cb10-55" aria-hidden="true" tabindex="-1"></a>                mode<span class="op">=</span><span class="st">"lines"</span>,</span>
+<span id="cb10-56"><a href="#cb10-56" aria-hidden="true" tabindex="-1"></a>                name<span class="op">=</span><span class="ss">f"</span><span class="sc">{</span>player<span class="sc">}</span><span class="ss"> (fit)"</span>,</span>
+<span id="cb10-57"><a href="#cb10-57" aria-hidden="true" tabindex="-1"></a>                line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span>color, width<span class="op">=</span><span class="dv">3</span>),</span>
+<span id="cb10-58"><a href="#cb10-58" aria-hidden="true" tabindex="-1"></a>                legendgroup<span class="op">=</span>player,</span>
+<span id="cb10-59"><a href="#cb10-59" aria-hidden="true" tabindex="-1"></a>                showlegend<span class="op">=</span><span class="va">False</span></span>
+<span id="cb10-60"><a href="#cb10-60" aria-hidden="true" tabindex="-1"></a>            )</span>
+<span id="cb10-61"><a href="#cb10-61" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb10-62"><a href="#cb10-62" aria-hidden="true" tabindex="-1"></a>        fig.add_trace(</span>
+<span id="cb10-63"><a href="#cb10-63" aria-hidden="true" tabindex="-1"></a>            go.Scatter(</span>
+<span id="cb10-64"><a href="#cb10-64" aria-hidden="true" tabindex="-1"></a>                x<span class="op">=</span>ages_full,</span>
+<span id="cb10-65"><a href="#cb10-65" aria-hidden="true" tabindex="-1"></a>                y<span class="op">=</span>np.where(<span class="op">~</span>obs_mask, pts_plot, <span class="va">None</span>),</span>
+<span id="cb10-66"><a href="#cb10-66" aria-hidden="true" tabindex="-1"></a>                mode<span class="op">=</span><span class="st">"lines"</span>,</span>
+<span id="cb10-67"><a href="#cb10-67" aria-hidden="true" tabindex="-1"></a>                name<span class="op">=</span><span class="ss">f"</span><span class="sc">{</span>player<span class="sc">}</span><span class="ss"> (projected)"</span>,</span>
+<span id="cb10-68"><a href="#cb10-68" aria-hidden="true" tabindex="-1"></a>                line<span class="op">=</span><span class="bu">dict</span>(color<span class="op">=</span>color, width<span class="op">=</span><span class="dv">3</span>, dash<span class="op">=</span><span class="st">"dash"</span>),</span>
+<span id="cb10-69"><a href="#cb10-69" aria-hidden="true" tabindex="-1"></a>                legendgroup<span class="op">=</span>player,</span>
+<span id="cb10-70"><a href="#cb10-70" aria-hidden="true" tabindex="-1"></a>                showlegend<span class="op">=</span><span class="va">False</span></span>
+<span id="cb10-71"><a href="#cb10-71" aria-hidden="true" tabindex="-1"></a>            )</span>
+<span id="cb10-72"><a href="#cb10-72" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb10-73"><a href="#cb10-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-74"><a href="#cb10-74" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-75"><a href="#cb10-75" aria-hidden="true" tabindex="-1"></a>    fig.update_layout(</span>
+<span id="cb10-76"><a href="#cb10-76" aria-hidden="true" tabindex="-1"></a>        title<span class="op">=</span><span class="st">"Player Scoring Trajectories with Quadratic Fits, MVP Vote Getters"</span>,</span>
+<span id="cb10-77"><a href="#cb10-77" aria-hidden="true" tabindex="-1"></a>        xaxis_title<span class="op">=</span><span class="st">"Age"</span>,</span>
+<span id="cb10-78"><a href="#cb10-78" aria-hidden="true" tabindex="-1"></a>        yaxis_title<span class="op">=</span><span class="st">"Total Points (Season)"</span>,</span>
+<span id="cb10-79"><a href="#cb10-79" aria-hidden="true" tabindex="-1"></a>        template<span class="op">=</span><span class="st">"plotly_white"</span>,</span>
+<span id="cb10-80"><a href="#cb10-80" aria-hidden="true" tabindex="-1"></a>        hovermode<span class="op">=</span><span class="st">"closest"</span>,</span>
+<span id="cb10-81"><a href="#cb10-81" aria-hidden="true" tabindex="-1"></a>        yaxis<span class="op">=</span><span class="bu">dict</span>(<span class="bu">range</span><span class="op">=</span><span class="bu">list</span>(y_clip))</span>
+<span id="cb10-82"><a href="#cb10-82" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb10-83"><a href="#cb10-83" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-84"><a href="#cb10-84" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> fig</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div id="80068d8a-188c-4ff2-8abe-247c3a1f79dd" class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>fig <span class="op">=</span> plot_players_with_quadratics(</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    df,</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    player_models,</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    players_to_plot</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>fig.show()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
 <iframe src="Screenshots/player_age_curves.html" width="100%" height="500">
 </iframe>
 <p>Though some of the quadratic curves fit the data well, some of them predict unrealistic trajectories. In particular, the parabolas for Shai Gilgeous-Alexander, Cade Cunningham, and Evan Mobley all open upwards, which doesn’t make sense since in reality, they’ll eventually start to decline. Our choice in a quadratic model can partially be blamed, but so can our choice of fitting a unique model for each individual. By fitting individual models, we’re missing out on relationships between the parameters of different players. Bayesian statistics can help us resolve this.</p>
+</section>
+</section>
+<section id="multilevel-model" class="level2">
+<h2 class="anchored" data-anchor-id="multilevel-model">Multilevel model</h2>
 <p>Instead of fitting individual models, we can use a <a href="https://en.wikipedia.org/wiki/Multilevel_model">multilevel model</a>. These types of models are good for data that can be grouped at multiple levels. In this case, each datapoint consists of a player, his age, and how many points he scored. Our first type of model ignored the relationships at the player level, though this is important; players perform at different levels, with different peaks and improvement/decline rates. The second type of model we fit ignored relationships across the players at different ages, and this information is useful because biology and experience lead to players having similarly shaped trajectories.</p>
 <p>The Bayesian philosophy is as follows. We can again use the framework of the quadratic model</p>
 <p><span class="math display">\[Points_i = \beta_{0,i} + \beta_{1,i} Age_i + \beta_{2,i} Age_i^2 \]</span></p>
 <p>However, this time, we assume that the coefficients <span class="math inline">\(\beta_{0,i}\)</span> come from a distribution, as do the <span class="math inline">\(\beta_{1,i}\)</span> and <span class="math inline">\(\beta_{2,i}\)</span>. These assumptions impose a regularization on the coefficients and ensure that they don’t solely consider the individual player, but rather also overall scoring vs.&nbsp;age trends. The assumptions look like</p>
 <p><span class="math display">\[\beta_{0,i} \sim N(\mu_0, \sigma_0^2)\]</span> <span class="math display">\[\beta_{1,i} \sim N(\mu_1, \sigma_1^2)\]</span> <span class="math display">\[\beta_{2,i} \sim N(\mu_2, \sigma_2^2)\]</span></p>
-<p>Here’s what the code looks like as well as a plot of the same players’ trajectories using the hierarchical model.</p>
+<p>We initialize the <a href="https://en.wikipedia.org/wiki/Prior_probability">prior distributions</a> and values of <span class="math inline">\(\mu\)</span>s and <span class="math inline">\(\sigma\)</span>s and then the model uses <a href="https://en.wikipedia.org/wiki/Bayes%27_theorem">Bayes’ theorem</a> to take the priors and data to compute the <a href="https://en.wikipedia.org/wiki/Posterior_probability">posterior distributions</a>. Here’s the code to do this. Full disclosure: I got this code from ChatGPT. My first attempt had too many divergences and it suggested using the LKJ prior and a non-centered parametrization, and when I used the updated code it gave, it worked. <a href="https://github.com/gsarajian/gsarajian.github.io/blob/main/ChatGPT_code_explanation.pdf">Here’s</a> how it explains each part. The short explanation is that the means <span class="math inline">\(\mu_0, \mu_1\)</span>, and <span class="math inline">\(\mu_2\)</span> are population-level mean coefficients. We can use domain knowledge and intuition to initialize them in a way that makes sense, but ChatGPT just set them as 0 and I ran with it to try to get things to run. The values of <span class="math inline">\(\sigma\)</span> are initialized as <span class="math inline">\(10, 5\)</span>, and <span class="math inline">\(5\)</span>, and I think we could probably loosen these (make <span class="math inline">\(\sigma\)</span>s larger) if we’re worried about underfitting and tighten them (reduce initialized <span class="math inline">\(\sigma\)</span>s) if we think we may be overfitting.</p>
+<div id="bd41a65c-21da-4d53-825c-b2faae439c45" class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>player_idx, player_ids <span class="op">=</span> pd.factorize(filtered_df[<span class="st">"PLAYER_ID"</span>])</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>filtered_df[<span class="st">"PLAYER_ID"</span>] <span class="op">=</span> player_idx</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>age <span class="op">=</span> filtered_df[<span class="st">"AGE"</span>].values</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>points <span class="op">=</span> filtered_df[<span class="st">"PTS"</span>].values</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>player_idx <span class="op">=</span> filtered_df[<span class="st">"PLAYER_ID"</span>].values</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>n_players <span class="op">=</span> filtered_df[<span class="st">"PLAYER_ID"</span>].nunique()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div id="4b8e1d8e-568e-478c-a7c6-eb30eb93cf87" class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>age_c <span class="op">=</span> age <span class="op">-</span> age.mean()</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>age_c2 <span class="op">=</span> age_c <span class="op">**</span> <span class="dv">2</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div id="da09515d-031b-43d8-875b-15cb49d2d725" class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> pm.Model() <span class="im">as</span> model:</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ---- Population means ----</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    mu_beta <span class="op">=</span> pm.Normal(</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">"mu_beta"</span>,</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>        mu<span class="op">=</span>[<span class="fl">0.0</span>, <span class="fl">0.0</span>, <span class="fl">0.0</span>],</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>        sigma<span class="op">=</span>[<span class="fl">10.0</span>, <span class="fl">5.0</span>, <span class="fl">5.0</span>],</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>        shape<span class="op">=</span><span class="dv">3</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ---- Covariance of random effects ----</span></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>    chol, corr, sigmas <span class="op">=</span> pm.LKJCholeskyCov(</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>        <span class="st">"chol"</span>,</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>        n<span class="op">=</span><span class="dv">3</span>,</span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>        eta<span class="op">=</span><span class="fl">2.0</span>,</span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>        sd_dist<span class="op">=</span>pm.Exponential.dist(<span class="fl">1.0</span>),</span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>        compute_corr<span class="op">=</span><span class="va">True</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ---- Non-centered random effects ----</span></span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>    z <span class="op">=</span> pm.Normal(</span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>        <span class="st">"z"</span>,</span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>        mu<span class="op">=</span><span class="dv">0</span>,</span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>        sigma<span class="op">=</span><span class="dv">1</span>,</span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>        shape<span class="op">=</span>(n_players, <span class="dv">3</span>)</span>
+<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a>    beta <span class="op">=</span> pm.Deterministic(</span>
+<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a>        <span class="st">"beta"</span>,</span>
+<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a>        mu_beta <span class="op">+</span> pt.dot(z, chol.T)</span>
+<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb14-32"><a href="#cb14-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-33"><a href="#cb14-33" aria-hidden="true" tabindex="-1"></a>    beta0 <span class="op">=</span> beta[:, <span class="dv">0</span>]</span>
+<span id="cb14-34"><a href="#cb14-34" aria-hidden="true" tabindex="-1"></a>    beta1 <span class="op">=</span> beta[:, <span class="dv">1</span>]</span>
+<span id="cb14-35"><a href="#cb14-35" aria-hidden="true" tabindex="-1"></a>    beta2 <span class="op">=</span> beta[:, <span class="dv">2</span>]</span>
+<span id="cb14-36"><a href="#cb14-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-37"><a href="#cb14-37" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ---- Linear predictor ----</span></span>
+<span id="cb14-38"><a href="#cb14-38" aria-hidden="true" tabindex="-1"></a>    mu <span class="op">=</span> (</span>
+<span id="cb14-39"><a href="#cb14-39" aria-hidden="true" tabindex="-1"></a>        beta0[player_idx]</span>
+<span id="cb14-40"><a href="#cb14-40" aria-hidden="true" tabindex="-1"></a>        <span class="op">+</span> beta1[player_idx] <span class="op">*</span> age_c</span>
+<span id="cb14-41"><a href="#cb14-41" aria-hidden="true" tabindex="-1"></a>        <span class="op">+</span> beta2[player_idx] <span class="op">*</span> age_c<span class="op">**</span><span class="dv">2</span></span>
+<span id="cb14-42"><a href="#cb14-42" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb14-43"><a href="#cb14-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-44"><a href="#cb14-44" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ---- Observation noise ----</span></span>
+<span id="cb14-45"><a href="#cb14-45" aria-hidden="true" tabindex="-1"></a>    sigma <span class="op">=</span> pm.Exponential(<span class="st">"sigma"</span>, <span class="fl">1.0</span>)</span>
+<span id="cb14-46"><a href="#cb14-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-47"><a href="#cb14-47" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ---- Likelihood ----</span></span>
+<span id="cb14-48"><a href="#cb14-48" aria-hidden="true" tabindex="-1"></a>    points_obs <span class="op">=</span> pm.Normal(</span>
+<span id="cb14-49"><a href="#cb14-49" aria-hidden="true" tabindex="-1"></a>        <span class="st">"points_obs"</span>,</span>
+<span id="cb14-50"><a href="#cb14-50" aria-hidden="true" tabindex="-1"></a>        mu<span class="op">=</span>mu,</span>
+<span id="cb14-51"><a href="#cb14-51" aria-hidden="true" tabindex="-1"></a>        sigma<span class="op">=</span>sigma,</span>
+<span id="cb14-52"><a href="#cb14-52" aria-hidden="true" tabindex="-1"></a>        observed<span class="op">=</span>points</span>
+<span id="cb14-53"><a href="#cb14-53" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb14-54"><a href="#cb14-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-55"><a href="#cb14-55" aria-hidden="true" tabindex="-1"></a>    trace <span class="op">=</span> pm.sample(</span>
+<span id="cb14-56"><a href="#cb14-56" aria-hidden="true" tabindex="-1"></a>        <span class="dv">2000</span>,</span>
+<span id="cb14-57"><a href="#cb14-57" aria-hidden="true" tabindex="-1"></a>        tune<span class="op">=</span><span class="dv">2000</span>,</span>
+<span id="cb14-58"><a href="#cb14-58" aria-hidden="true" tabindex="-1"></a>        target_accept<span class="op">=</span><span class="fl">0.9</span>,</span>
+<span id="cb14-59"><a href="#cb14-59" aria-hidden="true" tabindex="-1"></a>        chains<span class="op">=</span><span class="dv">4</span></span>
+<span id="cb14-60"><a href="#cb14-60" aria-hidden="true" tabindex="-1"></a>    )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
 <iframe src="Screenshots/hierarchical_player_age_curves.html" width="100%" height="500">
 </iframe>
-<p>We immediately see that now, all the trajectories are downward opening, which matches what we’d expect from what we know about athletes’ careers. I think this might be overfitting a little bit because many of the players’ curves decline rather steeply. This analysis included all players who played in the ’24-’25 season, and we’re comparing so it includes hundreds of players who won’t have as long of careers or high of peaks as the MVP candidates we’re looking at here. One way we can assuage this overfitting is by relaxing our priors, increasing the hyperparameters for <span class="math inline">\(\sigma_i\)</span>.</p>
+<p>We immediately see that all the trajectories are now downward opening, which matches what we’d expect from what we know about athletes’ careers. I think this might be overfitting a little bit because many of the players’ curves decline rather steeply. This analysis included all players who played in the ’24-’25 season, and we’re comparing so it includes hundreds of players who won’t have as long of careers or high of peaks as the MVP candidates we’re looking at here. One way we can assuage this overfitting is by relaxing our priors, increasing the hyperparameters for the <span class="math inline">\(\sigma\)</span>.</p>
 <!-- New Years Resolution
 - Read and write more
 - Visit friends and family! SF, SB, Costa Rica, Peru, etc.
 - Moved by March (me & Chestnut)
 - Get even more shots up -->
-<section id="further-approaches-and-questions" class="level4">
-<h4 class="anchored" data-anchor-id="further-approaches-and-questions">Further approaches and questions</h4>
+</section>
+<section id="comparing-the-three-models" class="level2">
+<h2 class="anchored" data-anchor-id="comparing-the-three-models">Comparing the three models</h2>
+<p>One way we can compare the three models shown above is by seeing how well they predict future values. Instead of waiting for the current season (‘25-’26) to end, we can fit the model on the players’ data up to but <em>not</em> including ’24-’25, then see how well the model does in predicting the ’24-’25 scoring totals. We’ll look at both the <a href="https://en.wikipedia.org/wiki/Mean_squared_error">mean squared error</a> and the <a href="https://en.wikipedia.org/wiki/Mean_absolute_error">mean absolute error</a> as our metrics to compare the performance.</p>
+<p>I’ll show the results first and then the code for it after.</p>
+</section>
+<section id="results" class="level2">
+<h2 class="anchored" data-anchor-id="results">Results</h2>
+<table class="dataframe table table-sm table-striped small">
+<thead>
+<tr>
+<th>
+</th>
+<th>
+MSE
+</th>
+<th>
+MAE
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<th>
+Age-only
+</th>
+<td>
+434,242.99
+</td>
+<td>
+475.02
+</td>
+</tr>
+<tr>
+<th>
+Per-player
+</th>
+<td>
+551,429.81
+</td>
+<td>
+568.89
+</td>
+</tr>
+<tr>
+<th>
+Hierarchical
+</th>
+<td>
+116,174.63
+</td>
+<td>
+267.22
+</td>
+</tr>
+</tbody>
+</table>
+<p>We see that under both metrics, the hierarchical model vastly outperforms the other two. The way to interpret the errors is that on average, our hierarchical model prediction for the ’24-’25 season is about 267 points away from the true value and the squared error is 116 thousand squared points.</p>
+<section id="prepping-the-data" class="level3">
+<h3 class="anchored" data-anchor-id="prepping-the-data">Prepping the data</h3>
+<div id="10f9c68e-83ad-4e50-8006-d2036284dcd3" class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>df2 <span class="op">=</span> filtered_df.copy()</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract ending year (e.g. "2024-25" → 20252</span></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a><span class="dv">2</span><span class="er">df</span>[<span class="st">"season_end"</span>]<span class="op">=</span><span class="dv">2</span> <span class="dv">2</span><span class="er">df</span>[<span class="st">"SEASON_ID"</span>].<span class="bu">str</span>.split(<span class="st">"-"</span>).<span class="bu">str</span>[<span class="dv">1</span>].astype(<span class="bu">int</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div id="0d80c07a-2b95-4055-871f-e2d4b8f4f4b0" class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>train_df <span class="op">=</span> df2[df2[<span class="st">"season_end"</span>] <span class="op">&lt;=</span> <span class="dv">24</span>]</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>test_df  <span class="op">=</span> df2[df2[<span class="st">"season_end"</span>] <span class="op">==</span> <span class="dv">25</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div id="61d6f4c4-846c-4e1b-a7ec-a8de89dad6d0" class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>age_mean <span class="op">=</span> train_df[<span class="st">"AGE"</span>].mean()</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>train_df[<span class="st">"age_c"</span>] <span class="op">=</span> train_df[<span class="st">"AGE"</span>] <span class="op">-</span> age_mean</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>test_df[<span class="st">"age_c"</span>]  <span class="op">=</span> test_df[<span class="st">"AGE"</span>] <span class="op">-</span> age_mean</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div id="6b111bc6-9434-4cd9-a3ab-39c98afc32a2" class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>age_train <span class="op">=</span> train_df[<span class="st">"age_c"</span>].values</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>points_train <span class="op">=</span> train_df[<span class="st">"PTS"</span>].values</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>age_test <span class="op">=</span> test_df[<span class="st">"age_c"</span>].values</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>points_test <span class="op">=</span> test_df[<span class="st">"PTS"</span>].values</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div id="8be30f48-cd5c-40a5-a00b-730b8b606eb3" class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Unique players in training set</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>player_ids <span class="op">=</span> train_df[<span class="st">"PLAYER_ID"</span>].unique()</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>n_players <span class="op">=</span> <span class="bu">len</span>(player_ids)</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>player_id_to_idx <span class="op">=</span> {</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>    pid: i <span class="cf">for</span> i, pid <span class="kw">in</span> <span class="bu">enumerate</span>(player_ids)</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>train_df[<span class="st">"player_idx"</span>] <span class="op">=</span> train_df[<span class="st">"PLAYER_ID"</span>].<span class="bu">map</span>(player_id_to_idx)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div id="6db36343-fe9c-43e9-9e0f-d9e27c76c9d6" class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>test_df <span class="op">=</span> test_df[test_df[<span class="st">"PLAYER_ID"</span>].isin(player_ids)].copy()</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>test_df[<span class="st">"player_idx"</span>] <span class="op">=</span> test_df[<span class="st">"PLAYER_ID"</span>].<span class="bu">map</span>(player_id_to_idx)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div id="17d7458f-3ef5-42d2-95ab-87ef3f608267" class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>player_idx_train <span class="op">=</span> train_df[<span class="st">"player_idx"</span>].values</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>player_idx_test  <span class="op">=</span> test_df[<span class="st">"player_idx"</span>].values</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>age_train <span class="op">=</span> train_df[<span class="st">"age_c"</span>].values</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>points_train <span class="op">=</span> train_df[<span class="st">"PTS"</span>].values</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>age_test <span class="op">=</span> test_df[<span class="st">"age_c"</span>].values</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>points_test <span class="op">=</span> test_df[<span class="st">"PTS"</span>].values</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div id="39da286c-0772-42f9-abc6-867ad5750fd5" class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>test_df[<span class="st">"player_idx"</span>] <span class="op">=</span> test_df[<span class="st">"player_idx"</span>].fillna(<span class="op">-</span><span class="dv">1</span>).astype(<span class="bu">int</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section>
+<section id="age-only-model" class="level3">
+<h3 class="anchored" data-anchor-id="age-only-model">Age-only model</h3>
+<div id="bfcfbbe4-16e6-489d-86ef-fbd1a0c2c806" class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> pm.Model() <span class="im">as</span> age_only_model:</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ---- Priors ----</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    beta0 <span class="op">=</span> pm.Normal(<span class="st">"beta0"</span>, mu<span class="op">=</span><span class="fl">0.0</span>, sigma<span class="op">=</span><span class="fl">10.0</span>)</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>    beta1 <span class="op">=</span> pm.Normal(<span class="st">"beta1"</span>, mu<span class="op">=</span><span class="fl">0.0</span>, sigma<span class="op">=</span><span class="fl">5.0</span>)</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    beta2 <span class="op">=</span> pm.Normal(<span class="st">"beta2"</span>, mu<span class="op">=</span><span class="fl">0.0</span>, sigma<span class="op">=</span><span class="fl">5.0</span>)</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>    sigma <span class="op">=</span> pm.Exponential(<span class="st">"sigma"</span>, <span class="fl">1.0</span>)</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ---- Linear predictor ----</span></span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>    mu <span class="op">=</span> beta0 <span class="op">+</span> beta1 <span class="op">*</span> age_train <span class="op">+</span> beta2 <span class="op">*</span> age_train<span class="op">**</span><span class="dv">2</span></span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ---- Likelihood ----</span></span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>    points_obs <span class="op">=</span> pm.Normal(</span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>        <span class="st">"points_obs"</span>,</span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>        mu<span class="op">=</span>mu,</span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a>        sigma<span class="op">=</span>sigma,</span>
+<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a>        observed<span class="op">=</span>points_train</span>
+<span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb23-20"><a href="#cb23-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-21"><a href="#cb23-21" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ---- Sampling ----</span></span>
+<span id="cb23-22"><a href="#cb23-22" aria-hidden="true" tabindex="-1"></a>    trace_age_only <span class="op">=</span> pm.sample(</span>
+<span id="cb23-23"><a href="#cb23-23" aria-hidden="true" tabindex="-1"></a>        <span class="dv">2000</span>,</span>
+<span id="cb23-24"><a href="#cb23-24" aria-hidden="true" tabindex="-1"></a>        tune<span class="op">=</span><span class="dv">2000</span>,</span>
+<span id="cb23-25"><a href="#cb23-25" aria-hidden="true" tabindex="-1"></a>        chains<span class="op">=</span><span class="dv">4</span>,</span>
+<span id="cb23-26"><a href="#cb23-26" aria-hidden="true" tabindex="-1"></a>        target_accept<span class="op">=</span><span class="fl">0.9</span>,</span>
+<span id="cb23-27"><a href="#cb23-27" aria-hidden="true" tabindex="-1"></a>        random_seed<span class="op">=</span><span class="dv">42</span></span>
+<span id="cb23-28"><a href="#cb23-28" aria-hidden="true" tabindex="-1"></a>    )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div id="748f9197-1c15-4a57-9fb0-0917279f1543" class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>posterior <span class="op">=</span> trace_age_only.posterior</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>beta0_draws <span class="op">=</span> posterior[<span class="st">"beta0"</span>].values.reshape(<span class="op">-</span><span class="dv">1</span>)</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>beta1_draws <span class="op">=</span> posterior[<span class="st">"beta1"</span>].values.reshape(<span class="op">-</span><span class="dv">1</span>)</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>beta2_draws <span class="op">=</span> posterior[<span class="st">"beta2"</span>].values.reshape(<span class="op">-</span><span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div id="5f4148a9-19ea-45d0-9c1f-7ad4b5b4a801" class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>mu_test_draws <span class="op">=</span> (</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    beta0_draws[:, <span class="va">None</span>]</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> beta1_draws[:, <span class="va">None</span>] <span class="op">*</span> age_test[<span class="va">None</span>, :]</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> beta2_draws[:, <span class="va">None</span>] <span class="op">*</span> age_test[<span class="va">None</span>, :]<span class="op">**</span><span class="dv">2</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div id="1e4fd5b7-f7fc-48b5-951a-e93cb6fd0145" class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>mse_draws <span class="op">=</span> np.mean((points_test[<span class="va">None</span>, :] <span class="op">-</span> mu_test_draws)<span class="op">**</span><span class="dv">2</span>, axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>mse_age_only <span class="op">=</span> mse_draws.mean()</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>mae_draws <span class="op">=</span> np.mean(<span class="bu">abs</span>(points_test[<span class="va">None</span>, :] <span class="op">-</span> mu_test_draws), axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>mae_age_only <span class="op">=</span> mae_draws.mean()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section>
+<section id="individual-models-1" class="level3">
+<h3 class="anchored" data-anchor-id="individual-models-1">Individual Models</h3>
+<div id="ce646fae-a4f6-4a57-bd15-445ef3a72c4c" class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> pm.Model() <span class="im">as</span> per_player_model:</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ---- Player-specific coefficients (independent priors) ----</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>    beta0 <span class="op">=</span> pm.Normal(</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">"beta0"</span>,</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>        mu<span class="op">=</span><span class="fl">0.0</span>,</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>        sigma<span class="op">=</span><span class="fl">10.0</span>,</span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>        shape<span class="op">=</span>n_players</span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>    beta1 <span class="op">=</span> pm.Normal(</span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>        <span class="st">"beta1"</span>,</span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>        mu<span class="op">=</span><span class="fl">0.0</span>,</span>
+<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a>        sigma<span class="op">=</span><span class="fl">5.0</span>,</span>
+<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a>        shape<span class="op">=</span>n_players</span>
+<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a>    beta2 <span class="op">=</span> pm.Normal(</span>
+<span id="cb27-19"><a href="#cb27-19" aria-hidden="true" tabindex="-1"></a>        <span class="st">"beta2"</span>,</span>
+<span id="cb27-20"><a href="#cb27-20" aria-hidden="true" tabindex="-1"></a>        mu<span class="op">=</span><span class="fl">0.0</span>,</span>
+<span id="cb27-21"><a href="#cb27-21" aria-hidden="true" tabindex="-1"></a>        sigma<span class="op">=</span><span class="fl">5.0</span>,</span>
+<span id="cb27-22"><a href="#cb27-22" aria-hidden="true" tabindex="-1"></a>        shape<span class="op">=</span>n_players</span>
+<span id="cb27-23"><a href="#cb27-23" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb27-24"><a href="#cb27-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-25"><a href="#cb27-25" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ---- Observation noise ----</span></span>
+<span id="cb27-26"><a href="#cb27-26" aria-hidden="true" tabindex="-1"></a>    sigma <span class="op">=</span> pm.Exponential(<span class="st">"sigma"</span>, <span class="fl">1.0</span>)</span>
+<span id="cb27-27"><a href="#cb27-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-28"><a href="#cb27-28" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ---- Linear predictor ----</span></span>
+<span id="cb27-29"><a href="#cb27-29" aria-hidden="true" tabindex="-1"></a>    mu <span class="op">=</span> (</span>
+<span id="cb27-30"><a href="#cb27-30" aria-hidden="true" tabindex="-1"></a>        beta0[player_idx_train]</span>
+<span id="cb27-31"><a href="#cb27-31" aria-hidden="true" tabindex="-1"></a>        <span class="op">+</span> beta1[player_idx_train] <span class="op">*</span> age_train</span>
+<span id="cb27-32"><a href="#cb27-32" aria-hidden="true" tabindex="-1"></a>        <span class="op">+</span> beta2[player_idx_train] <span class="op">*</span> age_train<span class="op">**</span><span class="dv">2</span></span>
+<span id="cb27-33"><a href="#cb27-33" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb27-34"><a href="#cb27-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-35"><a href="#cb27-35" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ---- Likelihood ----</span></span>
+<span id="cb27-36"><a href="#cb27-36" aria-hidden="true" tabindex="-1"></a>    points_obs <span class="op">=</span> pm.Normal(</span>
+<span id="cb27-37"><a href="#cb27-37" aria-hidden="true" tabindex="-1"></a>        <span class="st">"points_obs"</span>,</span>
+<span id="cb27-38"><a href="#cb27-38" aria-hidden="true" tabindex="-1"></a>        mu<span class="op">=</span>mu,</span>
+<span id="cb27-39"><a href="#cb27-39" aria-hidden="true" tabindex="-1"></a>        sigma<span class="op">=</span>sigma,</span>
+<span id="cb27-40"><a href="#cb27-40" aria-hidden="true" tabindex="-1"></a>        observed<span class="op">=</span>points_train</span>
+<span id="cb27-41"><a href="#cb27-41" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb27-42"><a href="#cb27-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-43"><a href="#cb27-43" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ---- Sampling ----</span></span>
+<span id="cb27-44"><a href="#cb27-44" aria-hidden="true" tabindex="-1"></a>    trace_per_player <span class="op">=</span> pm.sample(</span>
+<span id="cb27-45"><a href="#cb27-45" aria-hidden="true" tabindex="-1"></a>        <span class="dv">2000</span>,</span>
+<span id="cb27-46"><a href="#cb27-46" aria-hidden="true" tabindex="-1"></a>        tune<span class="op">=</span><span class="dv">2000</span>,</span>
+<span id="cb27-47"><a href="#cb27-47" aria-hidden="true" tabindex="-1"></a>        chains<span class="op">=</span><span class="dv">4</span>,</span>
+<span id="cb27-48"><a href="#cb27-48" aria-hidden="true" tabindex="-1"></a>        target_accept<span class="op">=</span><span class="fl">0.9</span>,</span>
+<span id="cb27-49"><a href="#cb27-49" aria-hidden="true" tabindex="-1"></a>        random_seed<span class="op">=</span><span class="dv">42</span></span>
+<span id="cb27-50"><a href="#cb27-50" aria-hidden="true" tabindex="-1"></a>    )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div id="66dc46e8-eacd-4b81-8d7f-afd49e7c6f3e" class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>posterior <span class="op">=</span> trace_per_player.posterior</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>beta0_draws <span class="op">=</span> posterior[<span class="st">"beta0"</span>].values.reshape(<span class="op">-</span><span class="dv">1</span>, n_players)</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>beta1_draws <span class="op">=</span> posterior[<span class="st">"beta1"</span>].values.reshape(<span class="op">-</span><span class="dv">1</span>, n_players)</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>beta2_draws <span class="op">=</span> posterior[<span class="st">"beta2"</span>].values.reshape(<span class="op">-</span><span class="dv">1</span>, n_players)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div id="b1e588cc-9929-4a77-8b9b-a8888fca4e45" class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>mu_test_draws <span class="op">=</span> (</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    beta0_draws[:, player_idx_test]</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> beta1_draws[:, player_idx_test] <span class="op">*</span> age_test</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>    <span class="op">+</span> beta2_draws[:, player_idx_test] <span class="op">*</span> age_test<span class="op">**</span><span class="dv">2</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div id="daeb9f07-be38-4397-922e-c5d71a51e177" class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>mse_draws <span class="op">=</span> np.mean((points_test[<span class="va">None</span>, :] <span class="op">-</span> mu_test_draws)<span class="op">**</span><span class="dv">2</span>, axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>mae_draws <span class="op">=</span> np.mean(<span class="bu">abs</span>((points_test[<span class="va">None</span>, :] <span class="op">-</span> mu_test_draws)), axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>mse_per_player <span class="op">=</span> mse_draws.mean()</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>mae_per_player <span class="op">=</span> mae_draws.mean()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section>
+<section id="hierarchical-model" class="level3">
+<h3 class="anchored" data-anchor-id="hierarchical-model">Hierarchical Model</h3>
+<div id="61eb7470-8cb5-489a-8063-3779d4f72609" class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> pm.Model() <span class="im">as</span> hierarchical_model:</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ---- Population means ----</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>    mu_beta <span class="op">=</span> pm.Normal(</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">"mu_beta"</span>,</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>        mu<span class="op">=</span>[<span class="fl">0.0</span>, <span class="fl">0.0</span>, <span class="fl">0.0</span>],</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>        sigma<span class="op">=</span>[<span class="fl">10.0</span>, <span class="fl">5.0</span>, <span class="fl">5.0</span>],</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>        shape<span class="op">=</span><span class="dv">3</span></span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ---- Covariance of random effects ----</span></span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a>    chol, corr, sigmas <span class="op">=</span> pm.LKJCholeskyCov(</span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a>        <span class="st">"chol"</span>,</span>
+<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a>        n<span class="op">=</span><span class="dv">3</span>,</span>
+<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a>        eta<span class="op">=</span><span class="fl">2.0</span>,</span>
+<span id="cb31-16"><a href="#cb31-16" aria-hidden="true" tabindex="-1"></a>        sd_dist<span class="op">=</span>pm.Exponential.dist(<span class="fl">1.0</span>),</span>
+<span id="cb31-17"><a href="#cb31-17" aria-hidden="true" tabindex="-1"></a>        compute_corr<span class="op">=</span><span class="va">True</span></span>
+<span id="cb31-18"><a href="#cb31-18" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb31-19"><a href="#cb31-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-20"><a href="#cb31-20" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ---- Non-centered random effects ----</span></span>
+<span id="cb31-21"><a href="#cb31-21" aria-hidden="true" tabindex="-1"></a>    z <span class="op">=</span> pm.Normal(</span>
+<span id="cb31-22"><a href="#cb31-22" aria-hidden="true" tabindex="-1"></a>        <span class="st">"z"</span>,</span>
+<span id="cb31-23"><a href="#cb31-23" aria-hidden="true" tabindex="-1"></a>        mu<span class="op">=</span><span class="fl">0.0</span>,</span>
+<span id="cb31-24"><a href="#cb31-24" aria-hidden="true" tabindex="-1"></a>        sigma<span class="op">=</span><span class="fl">1.0</span>,</span>
+<span id="cb31-25"><a href="#cb31-25" aria-hidden="true" tabindex="-1"></a>        shape<span class="op">=</span>(n_players, <span class="dv">3</span>)</span>
+<span id="cb31-26"><a href="#cb31-26" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb31-27"><a href="#cb31-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-28"><a href="#cb31-28" aria-hidden="true" tabindex="-1"></a>    beta <span class="op">=</span> pm.Deterministic(</span>
+<span id="cb31-29"><a href="#cb31-29" aria-hidden="true" tabindex="-1"></a>        <span class="st">"beta"</span>,</span>
+<span id="cb31-30"><a href="#cb31-30" aria-hidden="true" tabindex="-1"></a>        mu_beta <span class="op">+</span> pt.dot(z, chol.T)</span>
+<span id="cb31-31"><a href="#cb31-31" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb31-32"><a href="#cb31-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-33"><a href="#cb31-33" aria-hidden="true" tabindex="-1"></a>    beta0 <span class="op">=</span> beta[:, <span class="dv">0</span>]</span>
+<span id="cb31-34"><a href="#cb31-34" aria-hidden="true" tabindex="-1"></a>    beta1 <span class="op">=</span> beta[:, <span class="dv">1</span>]</span>
+<span id="cb31-35"><a href="#cb31-35" aria-hidden="true" tabindex="-1"></a>    beta2 <span class="op">=</span> beta[:, <span class="dv">2</span>]</span>
+<span id="cb31-36"><a href="#cb31-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-37"><a href="#cb31-37" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ---- Linear predictor (TRAIN ONLY) ----</span></span>
+<span id="cb31-38"><a href="#cb31-38" aria-hidden="true" tabindex="-1"></a>    mu <span class="op">=</span> (</span>
+<span id="cb31-39"><a href="#cb31-39" aria-hidden="true" tabindex="-1"></a>        beta0[player_idx_train]</span>
+<span id="cb31-40"><a href="#cb31-40" aria-hidden="true" tabindex="-1"></a>        <span class="op">+</span> beta1[player_idx_train] <span class="op">*</span> age_train</span>
+<span id="cb31-41"><a href="#cb31-41" aria-hidden="true" tabindex="-1"></a>        <span class="op">+</span> beta2[player_idx_train] <span class="op">*</span> age_train<span class="op">**</span><span class="dv">2</span></span>
+<span id="cb31-42"><a href="#cb31-42" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb31-43"><a href="#cb31-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-44"><a href="#cb31-44" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ---- Observation noise ----</span></span>
+<span id="cb31-45"><a href="#cb31-45" aria-hidden="true" tabindex="-1"></a>    sigma <span class="op">=</span> pm.Exponential(<span class="st">"sigma"</span>, <span class="fl">1.0</span>)</span>
+<span id="cb31-46"><a href="#cb31-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-47"><a href="#cb31-47" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ---- Likelihood ----</span></span>
+<span id="cb31-48"><a href="#cb31-48" aria-hidden="true" tabindex="-1"></a>    pm.Normal(</span>
+<span id="cb31-49"><a href="#cb31-49" aria-hidden="true" tabindex="-1"></a>        <span class="st">"points_obs"</span>,</span>
+<span id="cb31-50"><a href="#cb31-50" aria-hidden="true" tabindex="-1"></a>        mu<span class="op">=</span>mu,</span>
+<span id="cb31-51"><a href="#cb31-51" aria-hidden="true" tabindex="-1"></a>        sigma<span class="op">=</span>sigma,</span>
+<span id="cb31-52"><a href="#cb31-52" aria-hidden="true" tabindex="-1"></a>        observed<span class="op">=</span>points_train</span>
+<span id="cb31-53"><a href="#cb31-53" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb31-54"><a href="#cb31-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-55"><a href="#cb31-55" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ---- Sampling ----</span></span>
+<span id="cb31-56"><a href="#cb31-56" aria-hidden="true" tabindex="-1"></a>    trace_hier <span class="op">=</span> pm.sample(</span>
+<span id="cb31-57"><a href="#cb31-57" aria-hidden="true" tabindex="-1"></a>        <span class="dv">2000</span>,</span>
+<span id="cb31-58"><a href="#cb31-58" aria-hidden="true" tabindex="-1"></a>        tune<span class="op">=</span><span class="dv">2000</span>,</span>
+<span id="cb31-59"><a href="#cb31-59" aria-hidden="true" tabindex="-1"></a>        chains<span class="op">=</span><span class="dv">4</span>,</span>
+<span id="cb31-60"><a href="#cb31-60" aria-hidden="true" tabindex="-1"></a>        target_accept<span class="op">=</span><span class="fl">0.9</span>,</span>
+<span id="cb31-61"><a href="#cb31-61" aria-hidden="true" tabindex="-1"></a>        random_seed<span class="op">=</span><span class="dv">42</span></span>
+<span id="cb31-62"><a href="#cb31-62" aria-hidden="true" tabindex="-1"></a>    )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div id="94722764-5292-41dc-ae48-f4f8a30d4750" class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>posterior <span class="op">=</span> trace_hier.posterior</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>beta_draws <span class="op">=</span> posterior[<span class="st">"beta"</span>].values.reshape(<span class="op">-</span><span class="dv">1</span>, n_players, <span class="dv">3</span>)</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>mu_beta_draws <span class="op">=</span> posterior[<span class="st">"mu_beta"</span>].values.reshape(<span class="op">-</span><span class="dv">1</span>, <span class="dv">3</span>)</span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>n_draws <span class="op">=</span> beta_draws.shape[<span class="dv">0</span>]</span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>n_test <span class="op">=</span> <span class="bu">len</span>(test_df)</span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>mu_test_draws <span class="op">=</span> np.zeros((n_draws, n_test))</span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> j <span class="kw">in</span> <span class="bu">range</span>(n_test):</span>
+<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a>    idx <span class="op">=</span> player_idx_test[j]</span>
+<span id="cb32-13"><a href="#cb32-13" aria-hidden="true" tabindex="-1"></a>    age <span class="op">=</span> age_test[j]</span>
+<span id="cb32-14"><a href="#cb32-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-15"><a href="#cb32-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> idx <span class="op">==</span> <span class="op">-</span><span class="dv">1</span>:</span>
+<span id="cb32-16"><a href="#cb32-16" aria-hidden="true" tabindex="-1"></a>        b0, b1, b2 <span class="op">=</span> mu_beta_draws.T</span>
+<span id="cb32-17"><a href="#cb32-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb32-18"><a href="#cb32-18" aria-hidden="true" tabindex="-1"></a>        b0 <span class="op">=</span> beta_draws[:, idx, <span class="dv">0</span>]</span>
+<span id="cb32-19"><a href="#cb32-19" aria-hidden="true" tabindex="-1"></a>        b1 <span class="op">=</span> beta_draws[:, idx, <span class="dv">1</span>]</span>
+<span id="cb32-20"><a href="#cb32-20" aria-hidden="true" tabindex="-1"></a>        b2 <span class="op">=</span> beta_draws[:, idx, <span class="dv">2</span>]</span>
+<span id="cb32-21"><a href="#cb32-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-22"><a href="#cb32-22" aria-hidden="true" tabindex="-1"></a>    mu_test_draws[:, j] <span class="op">=</span> b0 <span class="op">+</span> b1 <span class="op">*</span> age <span class="op">+</span> b2 <span class="op">*</span> age<span class="op">**</span><span class="dv">2</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div id="af10570d-e120-46e7-ab79-5927e82aabd1" class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>mse_draws <span class="op">=</span> np.mean((points_test[<span class="va">None</span>, :] <span class="op">-</span> mu_test_draws)<span class="op">**</span><span class="dv">2</span>, axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>mae_draws <span class="op">=</span> np.mean(<span class="bu">abs</span>((points_test[<span class="va">None</span>, :] <span class="op">-</span> mu_test_draws)), axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>mse_hierarchical <span class="op">=</span> mse_draws.mean()</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>mae_hierarchical <span class="op">=</span> mae_draws.mean()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
 </section>
 </section>
+<section id="further-approaches-and-questions" class="level2">
+<h2 class="anchored" data-anchor-id="further-approaches-and-questions">Further approaches and questions</h2>
+<p>We could go much deeper in several directions:</p>
+<ul>
+<li>We could allow for a more flexible model than simply a quadratic one. FiveThirtyEight’s <a href="https://fivethirtyeight.com/methodology/how-our-nba-predictions-work/">CARMELO</a> system uses local regression and likely outperforms what we’ve done here.</li>
+<li>We can further evaluate performance by looking at plots of the residuals, especially looking at residuals vs.&nbsp;age to see if there are major issues.</li>
+<li>We can fine-tune the initialized hyperparameters using <a href="https://en.wikipedia.org/wiki/Cross-validation_(statistics)">cross-validation</a>.</li>
+<li>This data included only players who played last season, and we can broaden the analysis to include players who have already retired. Presumably, some players will retire this season, so I don’t think our approach will bias things in one direction or another too much.</li>
+<li>More advanced models could be built off of these ideas and incorporate additional features such as height, weight, position, usage rate, etc.</li>
+<li>From what I gathered from McElreath’s book, the <span class="math inline">\(\mu\)</span>s and the <span class="math inline">\(\sigma\)</span>s would themselves come from distributions, and we’d select hyperparameters for those. I don’t fully see where that’s happening in the code, or if it’s happening at all. Is that just something that’s part of the theory but not explicit in practice due to the math working out really nicely with <a href="https://en.wikipedia.org/wiki/Conjugate_prior">conjugate priors</a>? If you have additional insight, please reach out!</li>
+</ul>
 </section>
 
 </main>
